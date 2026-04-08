@@ -1,0 +1,12 @@
+{
+    "name": "carniceria-pos" ,
+    "version": "1.0.0" ,
+    "private": "true" ,
+    "workspaces": [
+        "packages/*" ,
+        "services/backend" ,
+        "apps/frontend" ,
+        "apps/desktop"
+    ]
+}
+
