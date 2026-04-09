@@ -1,5 +1,9 @@
 {
-    "name": "@carniceria/shared" ,
-    "version": "1.0.0" ,
-    "main": "src/index.ts"
+    "name": "@carniceria/shared",
+    "version": "1.0.0",
+    "main": "src/index.ts",
+    "dependencies": {
+        "typescript": "^6.0.2",
+        "zod": "^4.3.6"
+    }
 }
