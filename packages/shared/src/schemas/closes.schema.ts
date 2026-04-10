@@ -10,5 +10,5 @@ export const FinishCloseSchema = z.object({
   total_expense: z.number().min(0).default(0),
 })
 
-export type CreateCloseType = z.infer<typeof CreateCloseSchema>
-export type FinishCloseType = z.infer<typeof FinishCloseSchema>
+export type CreateCloseData = z.infer<typeof CreateCloseSchema>
+export type FinishCloseData = z.infer<typeof FinishCloseSchema>
