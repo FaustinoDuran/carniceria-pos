@@ -7,4 +7,11 @@ export const CreateCustomerSchema = z.object({
     dni: z.string().min(8, 'DNI is required').optional(),
 })
 
+export const CustomerSchema = CreateCustomerSchema.extend({
+    id: z.number().int().positive(),
+    created_at: z.date().or(z.string()),
+    deleted_at: z.date().or(z.string()).nullable(),
+})
+
 export type CreateCustomerData = z.infer<typeof CreateCustomerSchema>;
+export type CustomerData = z.infer<typeof CustomerSchema>;

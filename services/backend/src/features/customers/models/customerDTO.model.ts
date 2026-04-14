@@ -1,6 +1,6 @@
 import { CreateCustomerSchema, CreateCustomerData } from '@carniceria/shared'
 
-export class Customer implements CreateCustomerData {
+export class CustomerDTO implements CreateCustomerData {
     private readonly _name: string
     private readonly _last_name: string
     private readonly _phone?: string
