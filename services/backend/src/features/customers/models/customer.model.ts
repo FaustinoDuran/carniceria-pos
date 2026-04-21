@@ -6,8 +6,8 @@ export class Customer implements CustomerData {
     private readonly _phone?: string
     private readonly _dni?: string
     private readonly _id: number;
-    private readonly _created_at: string | Date;
-    private readonly _deleted_at: string | Date | null;
+    private readonly _created_at:  Date;
+    private readonly _deleted_at:  Date | null;
 
     constructor(data: unknown) {
 
@@ -28,6 +28,6 @@ export class Customer implements CustomerData {
     get phone() : string | undefined { return this._phone; }
     get dni() : string | undefined { return this._dni; }
     get id() : number { return this._id; }
-    get created_at() : string | Date { return this._created_at; }
-    get deleted_at() : string | Date | null { return this._deleted_at; }
+    get created_at() :  Date { return this._created_at; }
+    get deleted_at() : Date | null { return this._deleted_at; }
 }

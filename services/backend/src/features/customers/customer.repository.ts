@@ -1,19 +1,30 @@
 import { pool } from '../../db'
 import { Customer } from './models/customer.model'
 import { CustomerDTO } from './models/customer.dto'
+import { CustomerFilters } from './types'
+import { mapToModel } from '../../shared/mappers.helper'
 
 
 export class CustomerRepository {
     
-    private mapToModel( row: unknown ) : Customer {
-        return new Customer(row)
-    }
-    
-    async getAll() : Promise < Customer[] > {
+    async getAll(filters?: CustomerFilters): Promise<Customer[]> {
+
+        const conditions: string[] = ['deleted_at IS NULL']
+        const values: unknown[] = []
+
+   
+        if (filters?.name) {
+            values.push(`%${filters.name}%`)
+            conditions.push(`name ILIKE $${values.length}`)
+        }
+
+        const where = `WHERE ${conditions.join(' AND ')}`
+
         const { rows } = await pool.query(
-            'SELECT * FROM customers WHERE deleted_at IS NULL ORDER BY created_at DESC'
+            `SELECT * FROM customers ${where} ORDER BY created_at DESC`, values
         )
-        return rows.map(row => this.mapToModel(row))
+
+         return rows.map(row => mapToModel(Customer, row))
     }
 
     async getById( id : number ) : Promise <Customer | null > {
@@ -21,7 +32,7 @@ export class CustomerRepository {
             'SELECT * FROM customers WHERE id = $1 AND deleted_at IS NULL',
             [id]
         )
-        return rows.length > 0 ? this.mapToModel(rows[0]) : null
+        return rows.length > 0 ? mapToModel(Customer, rows[0]) : null
     }
 
     async create( data : CustomerDTO ) : Promise < Customer> {
@@ -29,7 +40,7 @@ export class CustomerRepository {
             'INSERT INTO customers (name, last_name, phone, dni) VALUES ($1, $2, $3, $4) RETURNING *',
             [data.name, data.last_name, data.phone, data.dni]
         )
-        return this.mapToModel(rows[0])
+        return mapToModel(Customer, rows[0])
     }
 
     async softDelete( id : number ) : Promise < boolean > {

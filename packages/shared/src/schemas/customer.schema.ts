@@ -9,8 +9,8 @@ export const CreateCustomerSchema = z.object({
 
 export const CustomerSchema = CreateCustomerSchema.extend({
     id: z.number().int().positive(),
-    created_at: z.date().or(z.string()),
-    deleted_at: z.date().or(z.string()).nullable(),
+    created_at: z.coerce.date(),
+    deleted_at: z.coerce.date().nullable(),
 })
 
 export type CreateCustomerData = z.infer<typeof CreateCustomerSchema>;

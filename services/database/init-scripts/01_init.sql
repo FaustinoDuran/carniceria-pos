@@ -21,7 +21,7 @@ CREATE TABLE sales (
   close_id INTEGER REFERENCES closes(id) DEFAULT NULL,
   amount_meat NUMERIC(10,2) NOT NULL DEFAULT 0,
   amount_merchandise NUMERIC(10,2) NOT NULL DEFAULT 0,
-  pay_method VARCHAR(20) NOT NULL CHECK (pay_method IN ('cash', 'card', 'cc')),
+  pay_method VARCHAR(20) NOT NULL CHECK (pay_method IN ('cash', 'credit', 'cc', 'debit', 'transfer')),
   created_at TIMESTAMP DEFAULT NOW()
 );
 
