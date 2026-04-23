@@ -44,14 +44,14 @@ export class SaleRepository {
 
     async getById( id: number ) : Promise< Sale | null > {
         const { rows } = await pool.query(
-            'SELECT FROM sales * WHERE id = $1',[id]
+            'SELECT * FROM sales WHERE id = $1',[id]
         )
         return rows.length > 0 ? mapToModel( Sale,rows[0] ) : null
      } 
 
     async create( data:SaleDTO ) : Promise< Sale > {
         const { rows } = await pool.query(
-            'INSERT INTO sales (amount_meat, amount_merchandise, pay_method) VALUES ($1 $2 $3) RETURNING *',
+            'INSERT INTO sales (amount_meat, amount_merchandise, pay_method) VALUES ($1, $2, $3) RETURNING *',
             [data.amount_meat, data.amount_merchandise, data.pay_method]
         )
         return mapToModel( Sale,rows[0] )

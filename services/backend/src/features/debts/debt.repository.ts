@@ -37,7 +37,7 @@ export class DebtRepository {
 
     async create( data : DebtDTO ): Promise< Debt > {
         const { rows } = await pool.query(
-            `INSERT INTO debts (sales_id, customer_id, amount) VALUES ($1 $2 $3) RETURNING *`, 
+            `INSERT INTO debts (sales_id, customer_id, amount) VALUES ($1, $2, $3) RETURNING *`, 
             [data.sales_id, data.customer_id, data.amount]
 
         )
@@ -56,4 +56,3 @@ export class DebtRepository {
 }
 
 export const debtRepository = new DebtRepository()
-

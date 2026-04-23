@@ -1,8 +1,8 @@
 import { CreateDebtSchema,  CreateDebtData } from '@carniceria/shared'
 
 export class DebtDTO implements CreateDebtData {
-    private readonly _sales_id : string
-    private readonly _customer_id : string
+    private readonly _sales_id : number
+    private readonly _customer_id : number
     private readonly _amount : number 
 
     constructor(data: unknown) {
@@ -14,8 +14,7 @@ export class DebtDTO implements CreateDebtData {
         this._amount = validated.amount
     }
 
-    get sales_id() : string { return this._sales_id; }
-    get customer_id() : string { return this._customer_id; }
+    get sales_id() : number { return this._sales_id; }
+    get customer_id() : number { return this._customer_id; }
     get amount() : number { return this._amount; }
 }
-
