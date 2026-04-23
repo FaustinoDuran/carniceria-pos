@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const CreateDebtSchema = z.object({
-    sales_id: z.string().min(1, 'Sales ID is required'),
-    customer_id: z.string().min(1, 'Customer ID is required'),
+    sales_id: z.number().int().positive().min(1, 'Sales ID is required'),
+    customer_id: z.number().int().positive().min(1, 'Customer ID is required'),
     amount: z.number().positive('Amount must be a positive number'),
 })
 

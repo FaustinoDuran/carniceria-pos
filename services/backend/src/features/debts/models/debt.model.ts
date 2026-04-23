@@ -4,8 +4,8 @@ export class Debt implements DebtData {
     private readonly _id:number
     private readonly _created_at: Date
     private readonly _status: DebtData['status']
-    private readonly _sales_id : string
-    private readonly _customer_id : string
+    private readonly _sales_id : number
+    private readonly _customer_id : number
     private readonly _amount : number 
 
     constructor(data: unknown) {
@@ -22,8 +22,8 @@ export class Debt implements DebtData {
     get id() : number { return this._id}
     get created_at(): Date {return this._created_at}
     get status() : DebtData['status'] { return this._status}
-    get sales_id() : string { return this._sales_id; }
-    get customer_id() : string { return this._customer_id; }
+    get sales_id() : number { return this._sales_id; }
+    get customer_id() : number { return this._customer_id; }
     get amount() : number { return this._amount; }
 }
 
