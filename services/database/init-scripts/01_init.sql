@@ -34,7 +34,7 @@ CREATE TABLE expenses (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE debt (
+CREATE TABLE debts (
   id SERIAL PRIMARY KEY,
   sales_id INTEGER REFERENCES sales(id),
   customer_id INTEGER REFERENCES customers(id),
