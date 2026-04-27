@@ -1,10 +1,11 @@
 import dotenv from 'dotenv'
 
-dotenv.config();
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env'
+dotenv.config({ path: envFile })
 
 export const config = {
-    port: process.env.PORT || 3000,
-    db: {
+  port: process.env.PORT || 3000,
+  db: {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 5432,
     database: process.env.DB_NAME || 'carniceria',

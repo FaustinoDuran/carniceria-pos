@@ -1,12 +1,16 @@
 {
-    "name": "carniceria-pos" ,
-    "version": "1.0.0" ,
-    "private": "true" ,
+    "name": "carniceria-pos",
+    "version": "1.0.0",
+    "private": "true",
     "workspaces": [
-        "packages/*" ,
-        "services/backend" ,
-        "apps/frontend" ,
+        "packages/*",
+        "services/backend",
+        "apps/frontend",
         "apps/desktop"
-    ]
+    ],
+    "scripts": {
+        "test": "npm --workspace=services/backend run test",
+        "test:integration": "npm --workspace=services/backend run test:integration"
+    }
 }
 

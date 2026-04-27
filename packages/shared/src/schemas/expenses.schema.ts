@@ -9,10 +9,12 @@ export const CreateExpensesSchema = z.object({
 
 export const ExpensesSchema = CreateExpensesSchema.extend({
     id: z.number().int().positive().min(1,'ID is required'),
-    created_at: z.coerce.date()
+    created_at: z.coerce.date(),
+    close_id: z.number().int().positive().nullable(),
 })
 
 
 export type CreateExpensesData = z.infer<typeof CreateExpensesSchema>;
+export type ExpensesData = z.infer<typeof ExpensesSchema>
 
 
