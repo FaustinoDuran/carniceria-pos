@@ -21,7 +21,7 @@ export class CustomerRepository {
         const where = `WHERE ${conditions.join(' AND ')}`
 
         const { rows } = await pool.query(
-            `SELECT * FROM customers ${where} ORDER BY created_at DESC`, values
+            `SELECT * FROM customers ${where} ORDER BY created_at ASC`, values
         )
 
          return rows.map(row => mapToModel(Customer, row))
