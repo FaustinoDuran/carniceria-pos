@@ -10,7 +10,8 @@
     ],
     "scripts": {
         "test": "npm --workspace=services/backend run test",
-        "test:integration": "npm --workspace=services/backend run test:integration"
+        "test:integration": "npm --workspace=services/backend run test:integration",
+        "test:coverage": "npm --workspace=services/backend run test:coverage"
     }
 }
 

@@ -7,7 +7,8 @@ import { UpdateDebt } from './models/updateDebt.model'
  
 interface DebtFilters {
     customer_id?:number,
-    status?: DebtData['status']
+    status?: DebtData['status'],
+    id?: number
 }
 
 export class DebtRepository {

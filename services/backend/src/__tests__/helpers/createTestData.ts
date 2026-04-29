@@ -1,4 +1,4 @@
-import { CustomerRepository } from '../../features/customers/customer.repository'
+import { customerRepository } from '../../features/customers/customer.repository'
 import { saleRepository } from '../../features/sales/sale.repository'
 import { CustomerDTO } from '../../features/customers/models/customer.dto'
 import { SaleDTO } from '../../features/sales/models/sale.dto'
@@ -7,6 +7,7 @@ import { Sale } from '../../features/sales/models/sale.model'
 import { DebtRepository } from '../../features/debts/debt.repository'
 import { DebtDTO } from '../../features/debts/models/debt.dto'
 import { Debt } from '../../features/debts/models/debt.model'
+import { UpdateDebt } from '../../features/debts/models/updateDebt.model'
 
 export async function createTestCustomer(overrides = {}): Promise<Customer> {
   const dto = new CustomerDTO({
@@ -16,7 +17,7 @@ export async function createTestCustomer(overrides = {}): Promise<Customer> {
     dni: '12345678',
     ...overrides
   })
-  return new CustomerRepository().create(dto)
+  return customerRepository.create(dto)
 }
 
 export async function createTestSale(overrides = {}): Promise<Sale> {
@@ -37,5 +38,13 @@ export async function createTestDebt(sales_id:number ,customer_id:number ,overri
     ...overrides
   })
   return new DebtRepository().create(dto)
+}
+
+export async function createUpdateDebtData(amount: number, status: Debt['status']): Promise<UpdateDebt> {
+  const dto = new UpdateDebt({
+    amount,
+    status
+  })
+  return dto
 }
 
