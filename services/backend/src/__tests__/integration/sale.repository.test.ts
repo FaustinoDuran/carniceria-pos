@@ -78,8 +78,23 @@ describe('SaleRepository', () => {
                 expect(deleted).toBe(false)
                 expect(sales).toHaveLength(1)
             })
-
         })
 
+        describe('setClosed', () => {
+            it('should set sales as closed', async () => {
+                const sale = await createTestSale() 
+                await createTestSale()
+                const close = await createCloseTestData( [sale.id] , [])
+
+                const result = await saleRepository.setClosed( close.id , [sale.id] )
+                const sales = await saleRepository.getAll({ close_id: close.id })
+
+                expect(result).toBe(true)
+                expect(sales).toHaveLength(1)
+                expect(sales[0].close_id).toBe(close.id)
+            })
+
+
+        })
     })    
 })
