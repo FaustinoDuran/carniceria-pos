@@ -13,7 +13,6 @@ export class Customer implements CustomerData {
 
         const validated = CustomerSchema.parse(data)
 
-        
         this._name = validated.name
         this._last_name = validated.last_name
         this._phone = validated.phone

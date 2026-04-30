@@ -28,6 +28,11 @@ export class DebtRepository {
             conditions.push(`status = $${values.length}`)
         }
 
+        if (filters?.id !== undefined) {
+            values.push(filters.id)
+            conditions.push(`id = $${values.length}`)
+        }
+
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
         const { rows } = await pool.query(

@@ -1,7 +1,7 @@
 import { CreateCloseSchema, CreateCloseData } from '@carniceria/shared'
 
 export class OpenClose implements CreateCloseData {
-    private readonly _start_at: string
+    private readonly _start_at: Date
 
     constructor(data: unknown) {
         
@@ -10,6 +10,6 @@ export class OpenClose implements CreateCloseData {
         this._start_at = validated.start_at
     }
 
-    get start_at() : string { return this._start_at; }
+    get start_at() : Date { return this._start_at; }
 }
 

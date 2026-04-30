@@ -41,9 +41,15 @@ describe('DebtRepository', () => {
             const sale = await createTestSale()
             const debt = await createTestDebt(sale.id, customer.id)
 
+
+            const customer2 = await createTestCustomer()
+            const sale2 = await createTestSale()
+            await createTestDebt(sale2.id, customer2.id)
+
             const debts = await debtRepository.getAll({ id: debt.id })
             expect(debts).toHaveLength(1)
             expect(debts[0].id).toBe(debt.id)
+            expect(debts[0].amount).toBe(debt.amount)
         })
 
         it('should return debts filtered by customer_id', async () => {

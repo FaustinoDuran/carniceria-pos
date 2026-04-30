@@ -8,6 +8,10 @@ import { DebtRepository } from '../../features/debts/debt.repository'
 import { DebtDTO } from '../../features/debts/models/debt.dto'
 import { Debt } from '../../features/debts/models/debt.model'
 import { UpdateDebt } from '../../features/debts/models/updateDebt.model'
+import { Close } from '../../features/closes/models/close.model'
+import { OpenClose } from '../../features/closes/models/openClose.model'
+import { closeRepository } from '../../features/closes/close.repository'
+  
 
 export async function createTestCustomer(overrides = {}): Promise<Customer> {
   const dto = new CustomerDTO({
@@ -46,5 +50,14 @@ export async function createUpdateDebtData(amount: number, status: Debt['status'
     status
   })
   return dto
+}
+
+export async function createCloseTestData(sales_id : number[], expenses_id : number[]) : Promise<Close> {
+  const dto = new OpenClose({
+    start_at: new Date().toISOString(),
+    sales_id,
+    expenses_id
+  })
+  return closeRepository.create(dto)
 }
 

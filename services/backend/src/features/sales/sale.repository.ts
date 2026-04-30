@@ -30,6 +30,11 @@ export class SaleRepository {
             conditions.push(`pay_method = $${values.length}`)
         }
         
+        if (filters?.id !== undefined) {
+            values.push(filters.id)
+            conditions.push(`id = $${values.length}`)
+        }
+        
         const where = conditions.length
             ? `WHERE ${conditions.join(' AND ')}`
             : ''
@@ -42,12 +47,6 @@ export class SaleRepository {
         return rows.map(row => mapToModel(Sale, row))
     }
 
-    async getById( id: number ) : Promise< Sale | null > {
-        const { rows } = await pool.query(
-            'SELECT * FROM sales WHERE id = $1',[id]
-        )
-        return rows.length > 0 ? mapToModel( Sale,rows[0] ) : null
-     } 
 
     async create( data:SaleDTO ) : Promise< Sale > {
         const { rows } = await pool.query(
