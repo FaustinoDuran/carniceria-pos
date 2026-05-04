@@ -1,5 +1,5 @@
 import { saleRepository } from '../../features/sales/sale.repository'
-import { createTestSale, createCloseTestData } from '../helpers/createTestData'
+import { createTestSale, createTestClose } from '../helpers/createTestData'
 
 describe('SaleRepository', () => {
 
@@ -69,7 +69,7 @@ describe('SaleRepository', () => {
 
             it('should not delete a closed sale', async () => {
                 const sale = await createTestSale() 
-                const close = await createCloseTestData( [sale.id] , [])
+                const close = await createTestClose()
                 await saleRepository.setClosed( close.id , [sale.id] )
                 
                 const deleted = await saleRepository.delete(sale.id)
@@ -84,7 +84,7 @@ describe('SaleRepository', () => {
             it('should set sales as closed', async () => {
                 const sale = await createTestSale() 
                 await createTestSale()
-                const close = await createCloseTestData( [sale.id] , [])
+                const close = await createTestClose()
 
                 const result = await saleRepository.setClosed( close.id , [sale.id] )
                 const sales = await saleRepository.getAll({ close_id: close.id })

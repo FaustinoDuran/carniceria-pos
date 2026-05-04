@@ -14,7 +14,7 @@ export class FinishClose implements FinishCloseData {
         this._total_expense = validated.total_expense
     }
 
-    get end_at() : Date { return this._end_at; }
+    get end_at() : Date  { return this._end_at; }
     get total_income() : number { return this._total_income; }
     get total_expense() : number { return this._total_expense; }
 }

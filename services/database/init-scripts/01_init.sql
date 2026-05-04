@@ -4,14 +4,14 @@ CREATE TABLE customers (
   last_name VARCHAR(100) NOT NULL,
   phone VARCHAR(20),
   dni VARCHAR(20),
-  deleted_at TIMESTAMP DEFAULT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
+  deleted_at TIMESTAMPTZ DEFAULT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE closes (
   id SERIAL PRIMARY KEY,
-  start_at TIMESTAMP NOT NULL,
-  end_at TIMESTAMP DEFAULT NULL,
+  start_at TIMESTAMPTZ NOT NULL,
+  end_at TIMESTAMPTZ DEFAULT NULL,
   total_income NUMERIC(10,2) DEFAULT 0,
   total_expense NUMERIC(10,2) DEFAULT 0
 );
@@ -22,7 +22,7 @@ CREATE TABLE sales (
   amount_meat NUMERIC(10,2) NOT NULL DEFAULT 0,
   amount_merchandise NUMERIC(10,2) NOT NULL DEFAULT 0,
   pay_method VARCHAR(20) NOT NULL CHECK (pay_method IN ('cash', 'credit', 'cc', 'debit', 'transfer')),
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE expenses (
@@ -31,7 +31,7 @@ CREATE TABLE expenses (
   category VARCHAR(100) NOT NULL,
   amount NUMERIC(10,2) NOT NULL,
   description TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE debts (
@@ -40,5 +40,5 @@ CREATE TABLE debts (
   customer_id INTEGER REFERENCES customers(id),
   amount NUMERIC(10,2) NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'partial')),
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );

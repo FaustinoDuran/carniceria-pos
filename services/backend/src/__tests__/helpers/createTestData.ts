@@ -11,6 +11,7 @@ import { UpdateDebt } from '../../features/debts/models/updateDebt.model'
 import { Close } from '../../features/closes/models/close.model'
 import { OpenClose } from '../../features/closes/models/openClose.model'
 import { closeRepository } from '../../features/closes/close.repository'
+import {FinishClose} from '../../features/closes/models/finishClose.model'
   
 
 export async function createTestCustomer(overrides = {}): Promise<Customer> {
@@ -52,12 +53,18 @@ export async function createUpdateDebtData(amount: number, status: Debt['status'
   return dto
 }
 
-export async function createCloseTestData(sales_id : number[], expenses_id : number[]) : Promise<Close> {
+export async function createTestClose() : Promise<Close> {
   const dto = new OpenClose({
     start_at: new Date().toISOString(),
-    sales_id,
-    expenses_id
   })
   return closeRepository.create(dto)
 }
 
+export async function finishTestClose(id: number,): Promise< Close | null> {
+  const dto = new FinishClose({
+    total_income:600,
+    total_expense: 500,
+    end_at: new Date(),
+  })
+  return closeRepository.finish(id, dto)
+}

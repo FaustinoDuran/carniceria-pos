@@ -6,8 +6,8 @@ import { Close } from './models/close.model'
 
 interface CloseFilters {
     id?: number,
-    start_at?: string,
-    end_at?: string
+    start_at?: Date,
+    end_at?: Date | null
 }
 
 export class CloseRepository {
@@ -20,7 +20,7 @@ export class CloseRepository {
         return mapToModel( Close, rows[0] )
     }
     
-    async getAll( filters?: CloseFilters ) : Promise< Close[] | null> {
+    async getAll( filters?: CloseFilters ) : Promise< Close[] > {
         const conditions: string[] = []
         const values: unknown[] = []
 
@@ -33,7 +33,9 @@ export class CloseRepository {
             values.push(filters.start_at)
             conditions.push(`DATE(start_at) = DATE($${values.length})`)
         }
-        if(filters?.end_at) {
+        if (filters?.end_at === null) {
+            conditions.push('end_at IS NULL')
+        } else if (filters?.end_at !== undefined) {
             values.push(filters.end_at)
             conditions.push(`DATE(end_at) = DATE($${values.length})`)
         }
@@ -41,7 +43,7 @@ export class CloseRepository {
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
         const { rows } = await pool.query(
-            `SELECT * FROM closes ${where} ORDER BY created_at DESC`, values
+            `SELECT * FROM closes ${where} ORDER BY DATE(start_at) DESC`, values
         )
         return rows.map( row => mapToModel( Close, row))
     }

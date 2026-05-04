@@ -45,6 +45,7 @@ export class SaleRepository {
         )
 
         return rows.map(row => mapToModel(Sale, row))
+        
     }
 
 
