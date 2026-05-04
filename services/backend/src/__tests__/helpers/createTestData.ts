@@ -12,6 +12,9 @@ import { Close } from '../../features/closes/models/close.model'
 import { OpenClose } from '../../features/closes/models/openClose.model'
 import { closeRepository } from '../../features/closes/close.repository'
 import {FinishClose} from '../../features/closes/models/finishClose.model'
+import { expenseRepository } from '../../features/expenses/expense.repository'
+import { ExpenseDTO } from '../../features/expenses/models/expense.dto'
+import { Expense } from '../../features/expenses/models/expense.model'
   
 
 export async function createTestCustomer(overrides = {}): Promise<Customer> {
@@ -67,4 +70,13 @@ export async function finishTestClose(id: number,): Promise< Close | null> {
     end_at: new Date(),
   })
   return closeRepository.finish(id, dto)
+}
+
+export async function createTestExpense(amount: number): Promise<Expense> {
+  const dto = new ExpenseDTO({
+    category: 'Test',
+    amount,
+    description: 'Test expense'
+  })
+  return expenseRepository.create(dto)
 }

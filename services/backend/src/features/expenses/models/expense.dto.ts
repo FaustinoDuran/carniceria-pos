@@ -22,6 +22,3 @@ export class ExpenseDTO implements CreateExpensesData {
     
 
 }
-
-
-
