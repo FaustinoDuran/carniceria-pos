@@ -63,23 +63,23 @@ describe('CustomerRepository', () => {
 
             it('should return customer when exists', async () => {
                 const created = await createTestCustomer()
-                const found = await customerRepository.getById(created.id)
+                const found = await customerRepository.getAll({ id: created.id })
 
               expect(found).not.toBeNull()
-              expect(found?.id).toBe(created.id)
+              expect(found[0].id).toBe(created.id)
             })
         
             it('should return null when customer does not exist', async () => {
-              const found = await customerRepository.getById(999)
-              expect(found).toBeNull()
+              const found = await customerRepository.getAll({ id: 999 })
+              expect(found.length).toBe(0)
             })
         
             it('should return null when customer is soft deleted', async () => {
               const customer = await createTestCustomer()
               await customerRepository.softDelete(customer.id)
             
-              const found = await customerRepository.getById(customer.id)
-              expect(found).toBeNull()
+              const found = await customerRepository.getAll({ id: customer.id })
+              expect(found.length).toBe(0)
             })
         })
 

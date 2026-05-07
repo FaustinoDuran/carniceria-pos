@@ -1,9 +1,12 @@
 import { pool } from '../../db'
 import { Customer } from './models/customer.model'
 import { CustomerDTO } from './models/customer.dto'
-import { CustomerFilters } from './types'
 import { mapToModel } from '../../shared/mappers.helper'
 
+interface CustomerFilters {
+  name?: string
+  id?: number
+}
 
 export class CustomerRepository {
     
@@ -17,7 +20,11 @@ export class CustomerRepository {
             values.push(`%${filters.name}%`)
             conditions.push(`name ILIKE $${values.length}`)
         }
-
+        if(filters?.id !== undefined) {
+            values.push(filters.id)
+            conditions.push(`id = $${values.length}`)
+        }
+        
         const where = `WHERE ${conditions.join(' AND ')}`
 
         const { rows } = await pool.query(
@@ -27,13 +34,7 @@ export class CustomerRepository {
          return rows.map(row => mapToModel(Customer, row))
     }
 
-    async getById( id : number ) : Promise <Customer | null > {
-        const { rows } = await pool.query(
-            'SELECT * FROM customers WHERE id = $1 AND deleted_at IS NULL',
-            [id]
-        )
-        return rows.length > 0 ? mapToModel(Customer, rows[0]) : null
-    }
+
 
     async create( data : CustomerDTO ) : Promise < Customer> {
         const { rows } = await pool.query(
