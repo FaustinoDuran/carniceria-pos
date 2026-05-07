@@ -6,6 +6,7 @@ import { mapToModel } from '../../shared/mappers.helper'
 interface CustomerFilters {
   name?: string
   id?: number
+  dni?: string
 }
 
 export class CustomerRepository {
@@ -23,6 +24,10 @@ export class CustomerRepository {
         if(filters?.id !== undefined) {
             values.push(filters.id)
             conditions.push(`id = $${values.length}`)
+        }
+        if(filters?.dni !== undefined) {
+            values.push(filters.dni)
+            conditions.push(`dni = $${values.length}`)
         }
         
         const where = `WHERE ${conditions.join(' AND ')}`

@@ -15,6 +15,9 @@ import {FinishClose} from '../../features/closes/models/finishClose.model'
 import { expenseRepository } from '../../features/expenses/expense.repository'
 import { ExpenseDTO } from '../../features/expenses/models/expense.dto'
 import { Expense } from '../../features/expenses/models/expense.model'
+import { SaleDetailDTO } from '../../features/sale-details/models/sale-detail.dto'
+import { SaleDetail } from '../../features/sale-details/models/sale-detail.model'
+import { saleDetailRepository } from '../../features/sale-details/sale-detail.repository'
   
 
 export async function createTestCustomer(overrides = {}): Promise<Customer> {
@@ -79,4 +82,21 @@ export async function createTestExpense(amount: number): Promise<Expense> {
     description: 'Test expense'
   })
   return expenseRepository.create(dto)
+}
+
+export function createTestSaleDetailData(overrides = {}): SaleDetailDTO {
+  const dto = new SaleDetailDTO({
+    cut_name: 'Asado',
+    price_per_kg: 10,
+    weight_kg: 2,
+    ...overrides
+  })
+
+  return dto
+}
+
+export async function createTestSaleDetails(sale_id: number, overridesList = [{}]): Promise<SaleDetail[]> {
+  const details = overridesList.map((overrides) => createTestSaleDetailData(overrides))
+
+  return saleDetailRepository.createMany(sale_id, details)
 }

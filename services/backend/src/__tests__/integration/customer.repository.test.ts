@@ -57,6 +57,26 @@ describe('CustomerRepository', () => {
             })
             
         })
+        
+        describe('getByName', () => {
+            it('should return customer when exists', async () => {
+                const created = await createTestCustomer()
+                const found = await customerRepository.getAll({ name: created.name })
+
+              expect(found).not.toBeNull()
+              expect(found[0].name).toBe(created.name)
+            })
+        })
+
+        describe('getByDni', () => {
+            it('should return customer when exists', async () => {
+                const created = await createTestCustomer()
+                const found = await customerRepository.getAll({ dni: created.dni })
+
+              expect(found).not.toBeNull()
+              expect(found[0].dni).toBe(created.dni)
+            })
+        })
 
 
         describe('getById', () => {

@@ -25,6 +25,17 @@ CREATE TABLE sales (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE sale_details (
+  id SERIAL PRIMARY KEY,
+  sale_id INTEGER NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
+  cut_name VARCHAR(100) NOT NULL,
+  price_per_kg NUMERIC(10,2) NOT NULL,
+  weight_kg NUMERIC(10,2) NOT NULL,
+  subtotal NUMERIC(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  CONSTRAINT sale_details_subtotal_check CHECK (subtotal = ROUND(price_per_kg * weight_kg, 2))
+);
+
 CREATE TABLE expenses (
   id SERIAL PRIMARY KEY,
   close_id INTEGER REFERENCES closes(id) DEFAULT NULL,
