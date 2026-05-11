@@ -20,7 +20,7 @@ import { SaleDetail } from '../../features/sale-details/models/sale-detail.model
 import { saleDetailRepository } from '../../features/sale-details/sale-detail.repository'
   
 
-export async function createTestCustomer(overrides = {}): Promise<Customer> {
+export async function createTestCustomer(overrides = {}): Promise<Customer > {
   const dto = new CustomerDTO({
     name: 'Juan',
     last_name: 'Pérez',

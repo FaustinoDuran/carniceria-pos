@@ -5,8 +5,8 @@ import { mapToModel } from '../../shared/mappers.helper'
 
 interface CustomerFilters {
   name?: string
-  id?: number
-  dni?: string
+   
+
 }
 
 export class CustomerRepository {
@@ -21,15 +21,7 @@ export class CustomerRepository {
             values.push(`%${filters.name}%`)
             conditions.push(`name ILIKE $${values.length}`)
         }
-        if(filters?.id !== undefined) {
-            values.push(filters.id)
-            conditions.push(`id = $${values.length}`)
-        }
-        if(filters?.dni !== undefined) {
-            values.push(filters.dni)
-            conditions.push(`dni = $${values.length}`)
-        }
-        
+
         const where = `WHERE ${conditions.join(' AND ')}`
 
         const { rows } = await pool.query(
@@ -39,6 +31,24 @@ export class CustomerRepository {
          return rows.map(row => mapToModel(Customer, row))
     }
 
+    async getById(id: number): Promise<Customer | null> {
+        const { rows } = await pool.query(
+            'SELECT * FROM customers WHERE id = $1 AND deleted_at IS NULL',
+            [id]
+        )
+        if (rows.length === 0) return null
+        return mapToModel(Customer, rows[0])
+    }
+
+
+    async getByDni(dni: string): Promise<Customer | null> {
+        const { rows } = await pool.query(
+            'SELECT * FROM customers WHERE dni = $1 AND deleted_at IS NULL',
+            [dni]
+        )
+        if (rows.length === 0) return null
+        return mapToModel(Customer, rows[0])
+    }
 
 
     async create( data : CustomerDTO ) : Promise < Customer> {

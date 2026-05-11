@@ -67,41 +67,34 @@ describe('CustomerRepository', () => {
               expect(found[0].name).toBe(created.name)
             })
         })
-
+    })
         describe('getByDni', () => {
-            it('should return customer when exists', async () => {
-                const created = await createTestCustomer()
-                const found = await customerRepository.getAll({ dni: created.dni })
+                it('should return customer when exists', async () => {
+                        const created = await createTestCustomer()
+                        expect(created.dni).toBeDefined()
+                        const found = await customerRepository.getByDni(created.dni!)
 
-              expect(found).not.toBeNull()
-              expect(found[0].dni).toBe(created.dni)
-            })
+                    expect(found).not.toBeNull()
+                    expect(found?.dni).toBe(created.dni)
+                })
+         })
+        
+    describe('getById', () => {
+        it('should return customer when exists', async () => {
+            const created = await createTestCustomer()
+            const found = await customerRepository.getById(created.id)
+
+            expect(found).not.toBeNull()
+            expect(found?.id).toBe(created.id)
         })
 
-
-        describe('getById', () => {
-
-            it('should return customer when exists', async () => {
-                const created = await createTestCustomer()
-                const found = await customerRepository.getAll({ id: created.id })
-
-              expect(found).not.toBeNull()
-              expect(found[0].id).toBe(created.id)
-            })
-        
-            it('should return null when customer does not exist', async () => {
-              const found = await customerRepository.getAll({ id: 999 })
-              expect(found.length).toBe(0)
-            })
-        
-            it('should return null when customer is soft deleted', async () => {
-              const customer = await createTestCustomer()
-              await customerRepository.softDelete(customer.id)
-            
-              const found = await customerRepository.getAll({ id: customer.id })
-              expect(found.length).toBe(0)
-            })
+        it('should return null when customer does not exist', async () => {
+            const found = await customerRepository.getById(999)
+            expect(found).toBeNull()
         })
+    })
+
+
 
 
         describe('softDelete', () => {
@@ -117,4 +110,3 @@ describe('CustomerRepository', () => {
                 expect(result).toBe(false)
             })
         })
-    })

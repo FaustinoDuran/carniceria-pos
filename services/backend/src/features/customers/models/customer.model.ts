@@ -4,7 +4,7 @@ export class Customer implements CustomerData {
     private readonly _name: string
     private readonly _last_name: string
     private readonly _phone?: string
-    private readonly _dni?: string
+    private readonly _dni?: string | undefined
     private readonly _id: number;
     private readonly _created_at:  Date;
     private readonly _deleted_at:  Date | null;
