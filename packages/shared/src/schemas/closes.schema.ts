@@ -8,6 +8,7 @@ export const FinishCloseSchema = z.object({
   end_at: z.coerce.date(),
   total_income: z.number().min(0).default(0),
   total_expense: z.number().min(0).default(0),
+  expected_cash: z.number().min(0).nullable(),
 })
 
 export const CloseSchema = z.object({

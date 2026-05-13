@@ -25,5 +25,7 @@ export const mockDebt = new Debt({
   status: 'pending',
   sales_id: 1,
   customer_id: 1,
-  amount: 1500
+  amount: 1500,
+  pay_method: null,
+  updated_at: null,
 })

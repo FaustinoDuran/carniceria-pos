@@ -7,6 +7,9 @@ export class Debt implements DebtData {
     private readonly _sales_id : number
     private readonly _customer_id : number
     private readonly _amount : number 
+    private readonly _pay_method : DebtData['pay_method']
+    private readonly _updated_at : Date | null
+
 
     constructor(data: unknown) {
 
@@ -17,6 +20,8 @@ export class Debt implements DebtData {
         this._sales_id = validated.sales_id
         this._customer_id = validated.customer_id
         this._amount = validated.amount
+        this._pay_method = validated.pay_method
+        this._updated_at = validated.updated_at
     }
 
     get id() : number { return this._id}
@@ -25,5 +30,7 @@ export class Debt implements DebtData {
     get sales_id() : number { return this._sales_id; }
     get customer_id() : number { return this._customer_id; }
     get amount() : number { return this._amount; }
+    get pay_method() : DebtData['pay_method'] { return this._pay_method; }
+    get updated_at() : Date | null { return this._updated_at; }
 }
 

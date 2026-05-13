@@ -50,13 +50,12 @@ export class DebtRepository {
         return mapToModel( Debt, rows[0] )
     }
 
-    async update( id : number, data : UpdateDebt ) : Promise< Debt | null > {
+    async update(id: number, data: UpdateDebt): Promise<Debt | null> {
         const { rows } = await pool.query(
-            `UPDATE debts SET amount = $1, status = $2 WHERE id = $3 AND status != 'paid' RETURNING *`,
-            [data.amount,data.status,id]
-        )
-
-        return rows.length? mapToModel(Debt, rows[0]) : null
+            `UPDATE debts SET amount = $1, status = $2, pay_method = $3, updated_at = NOW() WHERE id = $4 AND status != 'paid' RETURNING *`,
+            [data.amount, data.status, data.pay_method, id])
+        
+            return rows.length ? mapToModel(Debt, rows[0]) : null
     }
     
 }

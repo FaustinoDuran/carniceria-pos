@@ -13,7 +13,8 @@ CREATE TABLE closes (
   start_at TIMESTAMPTZ NOT NULL,
   end_at TIMESTAMPTZ DEFAULT NULL,
   total_income NUMERIC(10,2) DEFAULT 0,
-  total_expense NUMERIC(10,2) DEFAULT 0
+  total_expense NUMERIC(10,2) DEFAULT 0,
+  expected_cash NUMERIC(10,2) DEFAULT NULL
 );
 
 CREATE TABLE sales (
@@ -51,5 +52,7 @@ CREATE TABLE debts (
   customer_id INTEGER REFERENCES customers(id),
   amount NUMERIC(10,2) NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'partial')),
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  pay_method VARCHAR(20) DEFAULT NULL CHECK (pay_method IN ('cash', 'credit', 'debit', 'transfer')),
+  updated_at TIMESTAMPTZ DEFAULT NULL
 );

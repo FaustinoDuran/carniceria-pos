@@ -9,11 +9,15 @@ export const CreateDebtSchema = z.object({
 export const DebtUpdateSchema = z.object({
   amount: z.number().positive('Amount must be a positive number'),
   status: z.enum(['pending', 'paid', 'partial']),
+  pay_method: z.enum(['cash', 'credit', 'debit', 'transfer']).nullable(),
+  updated_at: z.coerce.date().nullable(),
 })
 
 export const DebtSchema = CreateDebtSchema.extend({
   id: z.number().int().positive(),
   status: z.enum(['pending', 'paid', 'partial']),
+  pay_method: z.enum(['cash', 'credit', 'debit', 'transfer']).nullable(),
+  updated_at: z.coerce.date().nullable(),
   created_at: z.coerce.date(),
 })
 

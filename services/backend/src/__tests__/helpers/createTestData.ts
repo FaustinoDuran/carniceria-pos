@@ -54,7 +54,9 @@ export async function createTestDebt(sales_id:number ,customer_id:number ,overri
 export async function createUpdateDebtData(amount: number, status: Debt['status']): Promise<UpdateDebt> {
   const dto = new UpdateDebt({
     amount,
-    status
+    status,
+    pay_method: status === 'pending' ? null : 'cash',
+    updated_at: null,
   })
   return dto
 }
@@ -70,6 +72,7 @@ export async function finishTestClose(id: number,): Promise< Close | null> {
   const dto = new FinishClose({
     total_income:600,
     total_expense: 500,
+    expected_cash: 100,
     end_at: new Date(),
   })
   return closeRepository.finish(id, dto)
