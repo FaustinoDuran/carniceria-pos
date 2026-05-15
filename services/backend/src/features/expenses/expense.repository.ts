@@ -2,6 +2,7 @@ import { pool } from '../../db'
 import { Expense } from './models/expense.model'
 import { ExpenseDTO } from './models/expense.dto'
 import { mapToModel } from "../../shared/mappers.helper";
+import { PoolClient } from 'pg';
 
 export interface ExpenseFilters {
     close_id?: number | null
@@ -12,7 +13,7 @@ export interface ExpenseFilters {
 
 export class ExpenseRepository {
 
-    async getAll(filters? : ExpenseFilters) : Promise<Expense[]> {
+    async getAll(filters? : ExpenseFilters, client?: PoolClient) : Promise<Expense[]> {
 
         const conditions: string[] = []
         const values: unknown[] = []
@@ -39,7 +40,8 @@ export class ExpenseRepository {
 
         const where =  conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
-        const { rows } = await pool.query(
+        const executor = client ?? pool
+        const { rows } = await executor.query(
             `SELECT ALL * FROM expenses ${where} ORDER BY created_at DESC`,
             values
         )
@@ -62,8 +64,9 @@ export class ExpenseRepository {
         return (rowCount ?? 0) >  0
     }
 
-    async setClosed( close_id : number, expense_ids : number[] ) : Promise< boolean > {
-        const { rowCount } = await pool.query(
+    async setClosed( close_id : number, expense_ids : number[], client?: PoolClient ) : Promise< boolean > {
+        const executor = client ?? pool
+        const { rowCount } = await executor.query(
             'UPDATE expenses SET close_id = $1 WHERE id = ANY($2) AND close_id IS NULL',[close_id,expense_ids]
         )
         return (rowCount ?? 0) > 0

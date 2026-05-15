@@ -3,9 +3,9 @@ import { mapToModel } from '../../shared/mappers.helper'
 import { OpenClose } from './models/openClose.model'
 import { FinishClose } from './models/finishClose.model'
 import { Close } from './models/close.model'
+import { PoolClient } from 'pg'
 
 interface CloseFilters {
-    id?: number,
     start_at?: Date,
     end_at?: Date | null
 }
@@ -24,10 +24,6 @@ export class CloseRepository {
         const conditions: string[] = []
         const values: unknown[] = []
 
-        if (filters?.id !== undefined) {
-            values.push(filters.id)
-            conditions.push(`id = $${values.length}`)
-        }
         
         if (filters?.start_at) {
             values.push(filters.start_at)
@@ -48,10 +44,20 @@ export class CloseRepository {
         return rows.map( row => mapToModel( Close, row))
     }
 
-    async finish(id: number, dto: FinishClose): Promise<Close | null> {
+    async getById(id: number): Promise< Close | null > {
         const { rows } = await pool.query(
-            `UPDATE closes SET end_at = $1, total_income = $2, total_expense = $3 WHERE id = $4 AND end_at IS NULL
-            RETURNING *`,  [dto.end_at, dto.total_income, dto.total_expense, id]    )
+            'SELECT * FROM closes WHERE id = $1',
+            [id]
+        )
+        if (rows.length === 0) return null
+        return mapToModel(Close, rows[0])
+    }
+
+    async finish(id: number, dto: FinishClose, client?: PoolClient): Promise<Close | null> {
+        const executor = client ?? pool
+        const { rows } = await executor.query(
+            `UPDATE closes SET end_at = $1, total_income = $2, total_expense = $3, expected_cash = $4 WHERE id = $5 AND end_at IS NULL
+            RETURNING *`,  [dto.end_at, dto.total_income, dto.total_expense, dto.expected_cash, id]    )
     
         return rows.length ? mapToModel(Close, rows[0]) : null
     }

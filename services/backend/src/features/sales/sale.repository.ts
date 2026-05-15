@@ -3,10 +3,12 @@ import { Sale } from './models/sale.model';
 import { SaleDTO } from './models/sale.dto';
 import { SaleFilters } from './types';
 import { mapToModel } from "../../shared/mappers.helper";
+import { PoolClient } from 'pg';
 
 export class SaleRepository {
 
-    async getAll(filters?: SaleFilters): Promise<Sale[]> {
+    async getAll(filters?: SaleFilters, client?: PoolClient): Promise<Sale[]> {
+        
         
         const conditions: string[] = []
         const values: unknown[] = []
@@ -39,7 +41,8 @@ export class SaleRepository {
             ? `WHERE ${conditions.join(' AND ')}`
             : ''
 
-        const { rows } = await pool.query(
+        const executor = client ?? pool 
+        const { rows } = await executor.query(
             `SELECT * FROM sales ${where} ORDER BY created_at DESC`,
             values
         )
@@ -64,8 +67,9 @@ export class SaleRepository {
         return (rowCount ?? 0) > 0
     }
 
-    async setClosed( close_id : number, sale_ids : number[] ) : Promise< boolean > {
-        const { rowCount } = await pool.query(
+    async setClosed( close_id : number, sale_ids : number[], client?: PoolClient ) : Promise< boolean > {
+        const executor = client ?? pool
+        const { rowCount } = await executor.query(
             'UPDATE sales SET close_id = $1 WHERE id = ANY($2) AND close_id IS NULL',[close_id,sale_ids]
         )
         return (rowCount ?? 0) > 0

@@ -17,6 +17,7 @@ export const CloseSchema = z.object({
   end_at: z.coerce.date().nullable(),  
   total_income: z.number().min(0),
   total_expense: z.number().min(0),
+  expected_cash: z.number().min(0).nullable(),
 })
 
 export type CreateCloseData = z.infer<typeof CreateCloseSchema>

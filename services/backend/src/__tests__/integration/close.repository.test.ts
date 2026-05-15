@@ -38,10 +38,10 @@ describe('CloseRepository', () => {
                 const sale = await createTestSale({ customer_id: customer.id })
                 const close = await createTestClose()
                 await createTestClose()
-                const returnedClose = await closeRepository.getAll({ id: close.id })
+                const returnedClose = await closeRepository.getById(close.id)
 
-                expect(returnedClose?.length).toBe(1)
-                expect(returnedClose?.[0].id).toBe(close.id)
+                expect(returnedClose).not.toBeNull()
+                expect(returnedClose?.id).toBe(close.id)
                 
             })          
 
@@ -80,6 +80,7 @@ describe('CloseRepository', () => {
                 expect(finishClose?.end_at).not.toBeNull()
                 expect(finishClose?.total_income).toBe(600)
                 expect(finishClose?.total_expense).toBe(500)
+                expect(finishClose?.expected_cash).toBe(100)
             })
             
             it('should not finish a close that is already finished', async () => {
