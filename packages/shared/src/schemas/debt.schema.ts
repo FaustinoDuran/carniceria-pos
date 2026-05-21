@@ -6,15 +6,21 @@ export const CreateDebtSchema = z.object({
     amount: z.number().positive('Amount must be a positive number'),
 })
 
-export const DebtUpdateSchema = z.object({
-  amount: z.number().positive('Amount must be a positive number'),
-  status: z.enum(['pending', 'paid', 'partial']),
-  pay_method: z.enum(['cash', 'credit', 'debit', 'transfer']).nullable(),
-  updated_at: z.coerce.date().nullable(),
+export const RecordDebtPaymentSchema = z.object({
+  close_id: z.number().int().positive().min(1, 'Close ID is required'),
+  paid_amount: z.number().positive('Paid amount must be a positive number'),
+  pay_method: z.enum(['cash', 'credit', 'debit', 'transfer']),
+})
+
+export const DebtPaymentEventSchema = RecordDebtPaymentSchema.extend({
+  id: z.number().int().positive(),
+  debt_id: z.number().int().positive().min(1, 'Debt ID is required'),
+  created_at: z.coerce.date(),
 })
 
 export const DebtSchema = CreateDebtSchema.extend({
   id: z.number().int().positive(),
+  amount: z.number().min(0, 'Amount must be greater than or equal to 0'),
   status: z.enum(['pending', 'paid', 'partial']),
   pay_method: z.enum(['cash', 'credit', 'debit', 'transfer']).nullable(),
   updated_at: z.coerce.date().nullable(),
@@ -23,5 +29,6 @@ export const DebtSchema = CreateDebtSchema.extend({
 
 export type CreateDebtData = z.infer<typeof CreateDebtSchema>;
 export type DebtData = z.infer<typeof DebtSchema>
-export type DebtUpdateData = z.infer<typeof DebtUpdateSchema>;
+export type RecordDebtPaymentData = z.infer<typeof RecordDebtPaymentSchema>;
+export type DebtPaymentEventData = z.infer<typeof DebtPaymentEventSchema>;
 

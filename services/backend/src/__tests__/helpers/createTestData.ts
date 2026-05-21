@@ -7,7 +7,7 @@ import { Sale } from '../../features/sales/models/sale.model'
 import { DebtRepository } from '../../features/debts/debt.repository'
 import { DebtDTO } from '../../features/debts/models/debt.dto'
 import { Debt } from '../../features/debts/models/debt.model'
-import { UpdateDebt } from '../../features/debts/models/updateDebt.model'
+import { RecordDebtPayment } from '../../features/debts/models/recordDebtPayment.model'
 import { Close } from '../../features/closes/models/close.model'
 import { OpenClose } from '../../features/closes/models/openClose.model'
 import { closeRepository } from '../../features/closes/close.repository'
@@ -51,14 +51,16 @@ export async function createTestDebt(sales_id:number ,customer_id:number ,overri
   return new DebtRepository().create(dto)
 }
 
-export async function createUpdateDebtData(amount: number, status: Debt['status']): Promise<UpdateDebt> {
-  const dto = new UpdateDebt({
-    amount,
-    status,
-    pay_method: status === 'pending' ? null : 'cash',
-    updated_at: null,
+export function createRecordDebtPaymentData(
+  paid_amount: number,
+  close_id: number,
+  pay_method: 'cash' | 'credit' | 'debit' | 'transfer' = 'cash'
+): RecordDebtPayment {
+  return new RecordDebtPayment({
+    paid_amount,
+    close_id,
+    pay_method,
   })
-  return dto
 }
 
 export async function createTestClose() : Promise<Close> {

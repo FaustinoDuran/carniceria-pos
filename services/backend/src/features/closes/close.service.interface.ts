@@ -1,4 +1,4 @@
-
+import type {CloseReportData} from './types'
 import { Close } from './models/close.model'
 
 
@@ -14,9 +14,9 @@ export interface FinishCloseInput {
 
 export interface ICloseService {
     start() : Promise< Close >;
-    finish( id: number, input?: FinishCloseInput ): Promise<Close | null>;
+    finish( id: number, input?: FinishCloseInput ): Promise<Close>;
     getAll( filters?: CloseFilters ): Promise< Close[] >;
     getById( id: number ): Promise< Close >;
-    getActives(): Promise< Close[] >;
-
+    getActive(): Promise< Close >;
+    getReportData(id : number): Promise<CloseReportData>;
 }

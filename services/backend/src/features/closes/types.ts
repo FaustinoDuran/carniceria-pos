@@ -2,6 +2,7 @@ import { Close } from './models/close.model'
 import { Sale } from '../sales/models/sale.model'
 import { Expense } from '../expenses/models/expense.model'
 import { Debt } from '../debts/models/debt.model'
+import { DebtPaymentEvent } from '../debts/models/debtPaymentEvent.model'
 
 export interface SalesByPayMethod {
   cash: Sale[]
@@ -32,7 +33,7 @@ export interface CloseReportData {
   }
   debts: {
     generated: Debt[]
-    paid: Debt[]
+    paid: DebtPaymentEvent[]
   }
   expenses: Expense[]
   summary: CloseSummary
