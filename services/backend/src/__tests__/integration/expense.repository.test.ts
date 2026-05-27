@@ -1,5 +1,5 @@
 import { expenseRepository } from '../../features/expenses/expense.repository'
-import { createTestClose, createTestExpense } from '../helpers/createTestData'
+import { createTestClose, createTestExpense, finishTestClose } from '../helpers/createTestData'
 
 describe('ExpenseRepository', () => {
 
@@ -101,9 +101,10 @@ describe('ExpenseRepository', () => {
             const expense1 = await createTestExpense(500)
             const expense2 = await createTestExpense(300)
             const close1 = await createTestClose()
-            const close2 = await createTestClose()
 
             await expenseRepository.setClosed(close1.id, [expense1.id])
+            await finishTestClose(close1.id)
+            const close2 = await createTestClose()
             const closed = await expenseRepository.setClosed(close2.id, [expense1.id, expense2.id])
             const expensesClose1 = await expenseRepository.getAll({ close_id: close1.id })
             const expensesClose2 = await expenseRepository.getAll({ close_id: close2.id })

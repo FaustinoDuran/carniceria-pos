@@ -1,10 +1,12 @@
 import { debtRepository } from '../../features/debts/debt.repository'
+import { debtService } from '../../features/debts/debt.service'
 import {
     createTestCustomer,
     createTestSale,
     createTestDebt,
     createRecordDebtPaymentData,
     createTestClose,
+    finishTestClose,
 } from '../helpers/createTestData'
 
 
@@ -81,9 +83,10 @@ describe('DebtRepository', () => {
             await createTestDebt(sale2.id, customer2.id)
 
             const close = await createTestClose()
-            await debtRepository.recordPayment(
+            await debtService.recordPayment(
                 debt1.id,
-                createRecordDebtPaymentData(500, close.id, 'cash')
+                close.id,
+                createRecordDebtPaymentData(500, 'cash')
             )
 
             const debts = await debtRepository.getAll({ status: 'pending' })
@@ -103,9 +106,10 @@ describe('DebtRepository', () => {
             const debt = await createTestDebt(sale.id, customer.id)
             const close = await createTestClose()
 
-            const event = await debtRepository.recordPayment(
+            const event = await debtService.recordPayment(
                 debt.id,
-                createRecordDebtPaymentData(500, close.id, 'cash')
+                close.id,
+                createRecordDebtPaymentData(500, 'cash')
             )
 
             const updatedDebt = await debtRepository.getAll({ id: debt.id })
@@ -124,16 +128,20 @@ describe('DebtRepository', () => {
             const sale = await createTestSale()
             const debt = await createTestDebt(sale.id, customer.id)
             const close1 = await createTestClose()
-            const close2 = await createTestClose()
 
-            await debtRepository.recordPayment(
+            await debtService.recordPayment(
                 debt.id,
-                createRecordDebtPaymentData(500, close1.id, 'cash')
+                close1.id,
+                createRecordDebtPaymentData(500, 'cash')
             )
 
-            const finalEvent = await debtRepository.recordPayment(
+            await finishTestClose(close1.id)
+            const close2 = await createTestClose()
+
+            const finalEvent = await debtService.recordPayment(
                 debt.id,
-                createRecordDebtPaymentData(1000, close2.id, 'transfer')
+                close2.id,
+                createRecordDebtPaymentData(1000, 'transfer')
             )
 
             const updatedDebt = await debtRepository.getAll({ id: debt.id })
@@ -150,9 +158,10 @@ describe('DebtRepository', () => {
             const debt = await createTestDebt(sale.id, customer.id)
             const close = await createTestClose()
 
-            const result = await debtRepository.recordPayment(
+            const result = await debtService.recordPayment(
                 debt.id,
-                createRecordDebtPaymentData(2000, close.id, 'cash')
+                close.id,
+                createRecordDebtPaymentData(2000, 'cash')
             )
 
             const updatedDebt = await debtRepository.getAll({ id: debt.id })
@@ -170,14 +179,16 @@ describe('DebtRepository', () => {
             const debt = await createTestDebt(sale.id, customer.id)
             const close = await createTestClose()
 
-            await debtRepository.recordPayment(
+            await debtService.recordPayment(
                 debt.id,
-                createRecordDebtPaymentData(1500, close.id, 'cash')
+                close.id,
+                createRecordDebtPaymentData(1500, 'cash')
             )
 
-            const result = await debtRepository.recordPayment(
+            const result = await debtService.recordPayment(
                 debt.id,
-                createRecordDebtPaymentData(100, close.id, 'cash')
+                close.id,
+                createRecordDebtPaymentData(100, 'cash')
             )
 
             const events = await debtRepository.getPaymentEvents({ debt_id: debt.id })
@@ -188,9 +199,10 @@ describe('DebtRepository', () => {
 
         it('should return null if trying to pay a non existing debt', async () => {
             const close = await createTestClose()
-            const result = await debtRepository.recordPayment(
+            const result = await debtService.recordPayment(
                 9999,
-                createRecordDebtPaymentData(100, close.id, 'cash')
+                close.id,
+                createRecordDebtPaymentData(100, 'cash')
             )
 
             expect(result).toBeNull()
@@ -206,21 +218,26 @@ describe('DebtRepository', () => {
             const debt1 = await createTestDebt(sale1.id, customer1.id)
             const debt2 = await createTestDebt(sale2.id, customer2.id)
             const close1 = await createTestClose()
+
+            await debtService.recordPayment(
+                debt1.id,
+                close1.id,
+                createRecordDebtPaymentData(300, 'cash')
+            )
+
+            await debtService.recordPayment(
+                debt2.id,
+                close1.id,
+                createRecordDebtPaymentData(400, 'debit')
+            )
+
+            await finishTestClose(close1.id)
             const close2 = await createTestClose()
 
-            await debtRepository.recordPayment(
+            const secondEvent = await debtService.recordPayment(
                 debt1.id,
-                createRecordDebtPaymentData(300, close1.id, 'cash')
-            )
-
-            const secondEvent = await debtRepository.recordPayment(
-                debt1.id,
-                createRecordDebtPaymentData(200, close2.id, 'transfer')
-            )
-
-            await debtRepository.recordPayment(
-                debt2.id,
-                createRecordDebtPaymentData(400, close1.id, 'debit')
+                close2.id,
+                createRecordDebtPaymentData(200, 'transfer')
             )
 
             const byDebt = await debtRepository.getPaymentEvents({ debt_id: debt1.id })

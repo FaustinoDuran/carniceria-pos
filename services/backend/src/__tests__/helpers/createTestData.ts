@@ -53,12 +53,10 @@ export async function createTestDebt(sales_id:number ,customer_id:number ,overri
 
 export function createRecordDebtPaymentData(
   paid_amount: number,
-  close_id: number,
   pay_method: 'cash' | 'credit' | 'debit' | 'transfer' = 'cash'
 ): RecordDebtPayment {
   return new RecordDebtPayment({
     paid_amount,
-    close_id,
     pay_method,
   })
 }

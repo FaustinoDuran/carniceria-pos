@@ -14,8 +14,11 @@ CREATE TABLE closes (
   end_at TIMESTAMPTZ DEFAULT NULL,
   total_income NUMERIC(10,2) DEFAULT 0,
   total_expense NUMERIC(10,2) DEFAULT 0,
-  expected_cash NUMERIC(10,2) DEFAULT NULL
+  expected_cash NUMERIC(10,2) DEFAULT NULL,
+  CONSTRAINT closes_end_after_start CHECK (end_at IS NULL OR end_at >= start_at)
 );
+
+CREATE UNIQUE INDEX uq_closes_single_open ON closes ((1)) WHERE end_at IS NULL;
 
 CREATE TABLE sales (
   id SERIAL PRIMARY KEY,

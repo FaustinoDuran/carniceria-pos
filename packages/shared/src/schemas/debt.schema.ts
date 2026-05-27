@@ -7,7 +7,6 @@ export const CreateDebtSchema = z.object({
 })
 
 export const RecordDebtPaymentSchema = z.object({
-  close_id: z.number().int().positive().min(1, 'Close ID is required'),
   paid_amount: z.number().positive('Paid amount must be a positive number'),
   pay_method: z.enum(['cash', 'credit', 'debit', 'transfer']),
 })
@@ -15,6 +14,7 @@ export const RecordDebtPaymentSchema = z.object({
 export const DebtPaymentEventSchema = RecordDebtPaymentSchema.extend({
   id: z.number().int().positive(),
   debt_id: z.number().int().positive().min(1, 'Debt ID is required'),
+  close_id: z.number().int().positive().min(1, 'Close ID is required'),
   created_at: z.coerce.date(),
 })
 

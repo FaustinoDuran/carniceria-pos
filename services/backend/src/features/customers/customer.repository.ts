@@ -5,8 +5,6 @@ import { mapToModel } from '../../shared/mappers.helper'
 
 interface CustomerFilters {
   name?: string
-   
-
 }
 
 export class CustomerRepository {

@@ -6,7 +6,6 @@ import { DebtDTO } from './models/debt.dto'
 import { DebtPaymentEvent } from './models/debtPaymentEvent.model'
 import { RecordDebtPayment } from './models/recordDebtPayment.model'
 import { PoolClient } from 'pg'
-import { withTransaction } from '../../shared/transaction.helper'
  
 interface DebtFilters {
     customer_id?:number,
@@ -18,6 +17,18 @@ interface DebtPaymentEventFilters {
     debt_id?: number
     close_id?: number
     id?: number
+}
+
+interface DebtForPayment {
+    id: number
+    amount: number
+    status: DebtData['status']
+}
+
+interface DebtPaymentUpdateData {
+    amount: number
+    status: DebtData['status']
+    pay_method: DebtData['pay_method']
 }
 
 export class DebtRepository {
@@ -59,53 +70,44 @@ export class DebtRepository {
         return mapToModel( Debt, rows[0] )
     }
 
-    async recordPayment(id: number, data: RecordDebtPayment, client?: PoolClient): Promise<DebtPaymentEvent | null> {
-        const execute = async (queryClient: PoolClient): Promise<DebtPaymentEvent | null> => {
-            const { rows: debtRows } = await queryClient.query(
-                `SELECT id, amount, status FROM debts WHERE id = $1 FOR UPDATE`,
-                [id]
-            )
+    async getByIdForUpdate(id: number, client: PoolClient): Promise<DebtForPayment | null> {
+        const { rows } = await client.query(
+            `SELECT id, amount, status FROM debts WHERE id = $1 FOR UPDATE`,
+            [id]
+        )
 
-            if (!debtRows.length) {
-                return null
-            }
-
-            const debt = debtRows[0] as { amount: number; status: DebtData['status'] }
-
-            if (debt.status === 'paid' || data.paid_amount > debt.amount) {
-                return null
-            }
-
-            const remainingAmount = Number((debt.amount - data.paid_amount).toFixed(2))
-            const nextStatus: DebtData['status'] = remainingAmount === 0 ? 'paid' : 'partial'
-
-            const { rows: updatedDebtRows } = await queryClient.query(
-                `UPDATE debts
-                 SET amount = $1, status = $2, pay_method = $3, updated_at = NOW()
-                 WHERE id = $4
-                 RETURNING *`,
-                [remainingAmount, nextStatus, data.pay_method, id]
-            )
-
-            if (!updatedDebtRows.length) {
-                return null
-            }
-
-            const { rows: eventRows } = await queryClient.query(
-                `INSERT INTO debt_payment_events (debt_id, close_id, paid_amount, pay_method)
-                 VALUES ($1, $2, $3, $4)
-                 RETURNING *`,
-                [id, data.close_id, data.paid_amount, data.pay_method]
-            )
-
-            return mapToModel(DebtPaymentEvent, eventRows[0])
+        if (!rows.length) {
+            return null
         }
 
-        if (client) {
-            return execute(client)
+        return rows[0] as DebtForPayment
+    }
+
+    async updatePaymentState(id: number, data: DebtPaymentUpdateData, client: PoolClient): Promise<Debt | null> {
+        const { rows } = await client.query(
+            `UPDATE debts
+             SET amount = $1, status = $2, pay_method = $3, updated_at = NOW()
+             WHERE id = $4
+             RETURNING *`,
+            [data.amount, data.status, data.pay_method, id]
+        )
+
+        if (!rows.length) {
+            return null
         }
 
-        return withTransaction(execute)
+        return mapToModel(Debt, rows[0])
+    }
+
+    async createPaymentEvent(debt_id: number, close_id: number, data: RecordDebtPayment, client: PoolClient): Promise<DebtPaymentEvent> {
+        const { rows } = await client.query(
+            `INSERT INTO debt_payment_events (debt_id, close_id, paid_amount, pay_method)
+             VALUES ($1, $2, $3, $4)
+             RETURNING *`,
+            [debt_id, close_id, data.paid_amount, data.pay_method]
+        )
+
+        return mapToModel(DebtPaymentEvent, rows[0])
     }
 
     async getPaymentEvents(filters?: DebtPaymentEventFilters, client?: PoolClient): Promise<DebtPaymentEvent[]> {

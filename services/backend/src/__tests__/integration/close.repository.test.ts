@@ -25,8 +25,9 @@ describe('CloseRepository', () => {
                 const customer =await createTestCustomer()
                 const sale = await createTestSale({ customer_id: customer.id })
                 const close = await createTestClose()
-                await createTestClose()
                 await saleRepository.setClosed( close.id , [sale.id] )
+                await finishTestClose(close.id)
+                await createTestClose()
                 const closes = await closeRepository.getAll()
 
                 expect(closes?.length).toBe(2)
@@ -37,6 +38,7 @@ describe('CloseRepository', () => {
                 const customer =await createTestCustomer()
                 const sale = await createTestSale({ customer_id: customer.id })
                 const close = await createTestClose()
+                await finishTestClose(close.id)
                 await createTestClose()
                 const returnedClose = await closeRepository.getById(close.id)
 
