@@ -2,14 +2,7 @@ import { debtService } from '../../features/debts/debt.service'
 import { debtRepository } from '../../features/debts/debt.repository'
 import { withTransaction } from '../../shared/transaction.helper'
 import { RecordDebtPayment } from '../../features/debts/models/recordDebtPayment.model'
-import {
-    createMockDebt,
-    createMockDebtForPayment,
-    createMockDebtPaymentEvent,
-    createMockRecordDebtPayment,
-    mockDebt,
-    mockDebtDTO,
-} from './mocks'
+import {createMockDebt,createMockDebtForPayment,createMockDebtPaymentEvent,createMockRecordDebtPayment,mockDebt,mockDebtDTO, } from './mocks'
 
 vi.mock('../../features/debts/debt.repository')
 vi.mock('../../shared/transaction.helper', () => ({

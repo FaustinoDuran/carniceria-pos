@@ -5,7 +5,7 @@ import { Close } from './models/close.model'
 export interface CloseFilters {
   start_at?: Date
   end_at?: Date | null
-  is_open?: boolean
+  
 }
 
 export interface FinishCloseInput {
@@ -15,8 +15,8 @@ export interface FinishCloseInput {
 export interface ICloseService {
     start() : Promise< Close >;
     finish( id: number, input?: FinishCloseInput ): Promise<Close>;
-    getAll( filters?: CloseFilters ): Promise< Close[] >;
+    search( filters?: CloseFilters ): Promise< Close[] >;
     getById( id: number ): Promise< Close >;
-    getActive(): Promise< Close >;
+    getActive(): Promise< Close | null>;
     getReportData(id : number): Promise<CloseReportData>;
 }

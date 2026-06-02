@@ -13,7 +13,7 @@ export class CloseService implements ICloseService {
         throw new Error('Method not implemented.');
     }
 
-    async getAll(filters?: CloseFilters): Promise<Close[]> {
+    async search(filters?: CloseFilters): Promise<Close[]> {
         // Implementation for retrieving all closes with optional filters
         throw new Error('Method not implemented.');
     }
@@ -23,7 +23,7 @@ export class CloseService implements ICloseService {
         throw new Error('Method not implemented.');
     }
 
-    async getActive(): Promise<Close> {
+    async getActive(): Promise<Close | null> {
         // Implementation for retrieving the active close
         throw new Error('Method not implemented.');
     }

@@ -69,6 +69,30 @@ describe('CloseRepository', () => {
             })
         })
 
+        describe('getActive', () => {
+            it('should return the active close', async () => {
+                const customer = await createTestCustomer()
+                const sale = await createTestSale({ customer_id: customer.id })
+                const close = await createTestClose()
+                await saleRepository.setClosed( close.id , [sale.id] )
+                const activeClose = await closeRepository.getActive()
+
+                expect(activeClose).not.toBeNull()
+                expect(activeClose?.id).toBe(close.id)
+            })
+
+            it('should return null if there is no active close', async () => {
+                const customer = await createTestCustomer()
+                const sale = await createTestSale({ customer_id: customer.id })
+                const close = await createTestClose()
+                await saleRepository.setClosed( close.id , [sale.id] )
+                await finishTestClose(close.id)
+                const activeClose = await closeRepository.getActive()
+
+                expect(activeClose).toBeNull()
+            })
+        })
+
         describe('finish', () => {
 
             it('should finish a close', async () => {

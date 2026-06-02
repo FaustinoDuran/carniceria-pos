@@ -1,10 +1,20 @@
 import { pool } from '../../db'
 
 export async function cleanDatabase() {
-  await pool.query('DELETE FROM debt_payment_events')
-  await pool.query('DELETE FROM debts')
-  await pool.query('DELETE FROM sales')
-  await pool.query('DELETE FROM expenses')
-  await pool.query('DELETE FROM closes')
-  await pool.query('DELETE FROM customers')
+  try {
+    await pool.query(`
+      TRUNCATE TABLE
+        debt_payment_events,
+        sale_details,
+        debts,
+        sales,
+        expenses,
+        closes,
+        customers
+      RESTART IDENTITY CASCADE
+    `)
+  } catch (err) {
+    console.error('[cleanDatabase] TRUNCATE falló:', err)
+    throw err
+  }
 }

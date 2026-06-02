@@ -52,6 +52,14 @@ export class CloseRepository {
         if (rows.length === 0) return null
         return mapToModel(Close, rows[0])
     }
+    
+    async getActive(): Promise<Close | null> {
+        const { rows } = await pool.query(
+            'SELECT * FROM closes WHERE end_at IS NULL'
+        )
+        if (rows.length === 0) return null
+        return mapToModel(Close, rows[0])
+    }
 
     async finish(id: number, dto: FinishClose, client?: PoolClient): Promise<Close | null> {
         const executor = client ?? pool
