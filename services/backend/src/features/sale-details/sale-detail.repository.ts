@@ -1,17 +1,18 @@
 import { pool } from '../../db'
+import { PoolClient } from 'pg'
 import { SaleDetailDTO } from './models/sale-detail.dto'
 import { SaleDetail } from './models/sale-detail.model'
 import { mapToModel } from '../../shared/mappers.helper'
 
 export class SaleDetailRepository {
 
-
-    async createMany(sale_id: number, details: SaleDetailDTO[]): Promise<SaleDetail[]> {
+    async createMany(sale_id: number, details: SaleDetailDTO[], client?: PoolClient): Promise<SaleDetail[]> {
         if (!details.length) {
             return []
         }
 
         const values: unknown[] = []
+        const executor = client ?? pool
 
         const valueRows = details.map((detail, index) => {
             const offset = index * 5
@@ -19,7 +20,7 @@ export class SaleDetailRepository {
             return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`
         })
 
-        const { rows } = await pool.query(
+        const { rows } = await executor.query(
             `INSERT INTO sale_details (sale_id, cut_name, price_per_kg, weight_kg, subtotal)
              VALUES ${valueRows.join(', ')}
              RETURNING id, sale_id, cut_name, price_per_kg, weight_kg, subtotal, created_at`,
@@ -39,6 +40,14 @@ export class SaleDetailRepository {
         )
 
         return rows.map((row) => mapToModel(SaleDetail, row))
+    }
+
+    async deleteBySaleId(sale_id: number, client?: PoolClient): Promise<void> {
+        const executor = client ?? pool
+        await executor.query(
+            'DELETE FROM sale_details WHERE sale_id = $1',
+            [sale_id],
+        )
     }
 
 }

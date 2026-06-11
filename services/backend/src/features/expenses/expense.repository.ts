@@ -49,6 +49,15 @@ export class ExpenseRepository {
         return rows.map(row => mapToModel(Expense, row))
     }
 
+    async getById(id: number, client?: PoolClient): Promise<Expense | null> {
+        const executor = client ?? pool
+        const { rows } = await executor.query(
+            'SELECT * FROM expenses WHERE id = $1',
+            [id]
+        )
+        return rows.length ? mapToModel(Expense, rows[0]) : null
+    }
+
     async create( data : ExpenseDTO ) : Promise< Expense > {
         const { rows } = await pool.query(
             `INSERT INTO expenses (category, amount, description) VALUES ($1, $2, $3) RETURNING *`,
@@ -62,6 +71,40 @@ export class ExpenseRepository {
             `DELETE FROM expenses WHERE id = $1 AND close_id IS NULL`, [id]
         )
         return (rowCount ?? 0) >  0
+    }
+
+    async update(id: number, data: { category?: string; amount?: number; description?: string }, client?: PoolClient): Promise<Expense | null> {
+        const conditions: string[] = []
+        const values: unknown[] = []
+
+        if (data.category !== undefined) {
+            values.push(data.category)
+            conditions.push(`category = $${values.length}`)
+        }
+
+        if (data.amount !== undefined) {
+            values.push(data.amount)
+            conditions.push(`amount = $${values.length}`)
+        }
+
+        if (data.description !== undefined) {
+            values.push(data.description)
+            conditions.push(`description = $${values.length}`)
+        }
+
+        if (conditions.length === 0) {
+            return null
+        }
+
+        values.push(id)
+        const setClause = conditions.join(', ')
+        const executor = client ?? pool
+        const { rows } = await executor.query(
+            `UPDATE expenses SET ${setClause} WHERE id = $${values.length} AND close_id IS NULL RETURNING *`,
+            values
+        )
+
+        return rows.length ? mapToModel(Expense, rows[0]) : null
     }
 
     async setClosed( close_id : number, expense_ids : number[], client?: PoolClient ) : Promise< boolean > {

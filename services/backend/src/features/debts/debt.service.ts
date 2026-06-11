@@ -1,4 +1,5 @@
 import { DebtData } from '@carniceria/shared'
+import { PoolClient } from 'pg'
 import { withTransaction } from '../../shared/transaction.helper'
 import { debtRepository } from './debt.repository'
 import { DebtFilters, DebtPaymentEventFilters, IDebtService } from './debt.service.interface'
@@ -8,9 +9,9 @@ import { DebtPaymentEvent } from './models/debtPaymentEvent.model'
 import { RecordDebtPayment } from './models/recordDebtPayment.model'
 
 export class DebtService implements IDebtService {
-    async create(data: DebtDTO): Promise<Debt> {
+    async create(data: DebtDTO, client?: PoolClient): Promise<Debt> {
         const dto = new DebtDTO(data)
-        return debtRepository.create(dto)
+        return debtRepository.create(dto, client)
     }
 
     async search(filters?: DebtFilters): Promise<Debt[]> {

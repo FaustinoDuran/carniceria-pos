@@ -11,7 +11,9 @@
     "scripts": {
         "test": "npm --workspace=services/backend run test",
         "test:integration": "npm --workspace=services/backend run test:integration",
-        "test:coverage": "npm --workspace=services/backend run test:coverage"
+        "test:coverage": "npm --workspace=services/backend run test:coverage",
+        "test:unit": "npm --workspace=services/backend run test:unit",
+        "dev": "npm run test:unit && npm run test:integration"
     }
 }
 

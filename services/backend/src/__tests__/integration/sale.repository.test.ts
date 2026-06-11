@@ -93,8 +93,71 @@ describe('SaleRepository', () => {
                 expect(sales).toHaveLength(1)
                 expect(sales[0].close_id).toBe(close.id)
             })
+        })
 
+        describe('update', () => {
+            it('should update sale amount_meat', async () => {
+                const sale = await createTestSale()
 
+                const updated = await saleRepository.update(sale.id, { amount_meat: 2000 })
+
+                expect(updated).not.toBeNull()
+                expect(updated?.amount_meat).toBe(2000)
+                expect(updated?.amount_merchandise).toBe(500)
+            })
+
+            it('should update sale amount_merchandise', async () => {
+                const sale = await createTestSale()
+
+                const updated = await saleRepository.update(sale.id, { amount_merchandise: 750 })
+
+                expect(updated).not.toBeNull()
+                expect(updated?.amount_merchandise).toBe(750)
+                expect(updated?.amount_meat).toBe(1000)
+            })
+
+            it('should update sale pay_method', async () => {
+                const sale = await createTestSale()
+
+                const updated = await saleRepository.update(sale.id, { pay_method: 'cash' })
+
+                expect(updated).not.toBeNull()
+                expect(updated?.pay_method).toBe('cash')
+            })
+
+            it('should update multiple sale fields at once', async () => {
+                const sale = await createTestSale()
+
+                const updated = await saleRepository.update(sale.id, { 
+                    amount_meat: 1500,
+                    amount_merchandise: 1000,
+                    pay_method: 'transfer'
+                })
+
+                expect(updated).not.toBeNull()
+                expect(updated?.amount_meat).toBe(1500)
+                expect(updated?.amount_merchandise).toBe(1000)
+                expect(updated?.pay_method).toBe('transfer')
+            })
+
+            it('should not update a closed sale', async () => {
+                const sale = await createTestSale()
+                const close = await createTestClose()
+
+                await saleRepository.setClosed(close.id, [sale.id])
+
+                const updated = await saleRepository.update(sale.id, { amount_meat: 2000 })
+
+                expect(updated).toBeNull()
+            })
+
+            it('should return null when no fields are provided for update', async () => {
+                const sale = await createTestSale()
+
+                const updated = await saleRepository.update(sale.id, {})
+
+                expect(updated).toBeNull()
+            })
         })
     })    
 })

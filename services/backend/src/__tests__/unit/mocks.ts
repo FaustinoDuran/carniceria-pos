@@ -6,7 +6,9 @@ import { DebtPaymentEvent } from '../../features/debts/models/debtPaymentEvent.m
 import { RecordDebtPayment } from '../../features/debts/models/recordDebtPayment.model'
 import { Close } from '../../features/closes/models/close.model'
 import { Sale } from '../../features/sales/models/sale.model'
+import { SaleDTO, UpdateSaleDTO } from '../../features/sales/models/sale.dto'
 import { Expense } from '../../features/expenses/models/expense.model'
+import { ExpenseDTO, UpdateExpenseDTO } from '../../features/expenses/models/expense.dto'
 
 
 // 1. CLOSES MOCKS (Cajas)
@@ -54,6 +56,18 @@ export const createMockSale = (overrides?: Partial<any>): Sale => {
         ...overrides,
     })
 }
+
+export const mockSaleDTO = new SaleDTO({
+    amount_meat: 100,
+    amount_merchandise: 50,
+    pay_method: 'cash',
+})
+
+export const mockUpdateSaleDTO = new UpdateSaleDTO({
+    amount_meat: 150,
+    amount_merchandise: 75,
+    pay_method: 'transfer',
+})
 
 // EXPENSE MOCKS (Gastos)
 
@@ -149,34 +163,62 @@ export const createMockDebtPaymentEvent = (overrides?: Partial<any>): DebtPaymen
     })
 }
 
+const mockReportCashSale = createMockSale({ pay_method: 'cash', amount_meat: 600, amount_merchandise: 400 })
+const mockReportTransferSale = createMockSale({ pay_method: 'transfer', amount_meat: 300, amount_merchandise: 0 })
+const mockReportCardSale = createMockSale({ pay_method: 'credit', amount_meat: 200, amount_merchandise: 0 })
+const mockReportCcSale = createMockSale({ pay_method: 'cc', amount_meat: 0, amount_merchandise: 100 })
+const mockReportGeneratedDebt = createMockDebt({ amount: 1500 })
+const mockReportPaidDebt = createMockDebtPaymentEvent({ paid_amount: 100 })
+const mockReportExpense = createMockExpense({ amount: 300 })
+
 export const mockCloseReportData = {
-    close: createMockCloseFinished(),
+    close: createMockCloseFinished({ expected_cash: 1200 }),
     sales: {
-        all: [createMockSale({ amount_meat: 700, amount_merchandise: 300 })],
+        all: [
+            mockReportCashSale,
+            mockReportTransferSale,
+            mockReportCardSale,
+            mockReportCcSale,
+        ],
         byPayMethod: {
-            cash: [createMockSale({ pay_method: 'cash', amount_meat: 600, amount_merchandise: 400 })],
-            transfer: [createMockSale({ pay_method: 'transfer', amount_meat: 300, amount_merchandise: 0 })],
-            card: [createMockSale({ pay_method: 'credit', amount_meat: 200, amount_merchandise: 0 })],
-            cc: [createMockSale({ pay_method: 'cc', amount_meat: 0, amount_merchandise: 100 })],
+            cash: [mockReportCashSale],
+            transfer: [mockReportTransferSale],
+            card: [mockReportCardSale],
+            cc: [mockReportCcSale],
         },
     },
     debts: {
-        generated: [createMockDebt()],
-        paid: [createMockDebtPaymentEvent()],
+        generated: [mockReportGeneratedDebt],
+        paid: [mockReportPaidDebt],
     },
-    expenses: [createMockExpense({ amount: 300 })],
+    expenses: [mockReportExpense],
     summary: {
-        totalMeat: 1000,
+        totalMeat: 1100,
         totalMerchandise: 500,
-        totalSales: 1500,
+        totalSales: 1600,
         totalCash: 1000,
         totalTransfer: 300,
         totalCard: 200,
         totalDebtGenerated: 1500,
         totalDebtPaid: 100,
         totalExpenses: 300,
-        realIncome: 1200,
+        realIncome: 1300,
         expectedCash: 1200,
     },
 }
 
+// 5. EXPENSE MOCKS DTOs
+
+export const mockExpenseDTO = new ExpenseDTO({
+    category: 'other',
+    amount: 100,
+    description: 'Test expense',
+})
+
+export const mockUpdateExpenseDTO = new UpdateExpenseDTO({
+    category: 'supplies',
+    amount: 200,
+    description: 'Updated expense',
+})
+
+export const mockExpense = createMockExpense()

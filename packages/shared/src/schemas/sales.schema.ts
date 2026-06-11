@@ -12,5 +12,12 @@ export const SalesSchema = CreateSalesSchema.extend({
     created_at: z.coerce.date(),
 })
 
+export const UpdateSalesSchema = z.object({
+    amount_meat: z.number().min(0).optional(),
+    amount_merchandise: z.number().min(0).optional(),
+    pay_method: z.enum(['cash', 'credit', 'cc', 'debit', 'transfer']).optional(),
+})
+
 export type CreateSalesData = z.infer<typeof CreateSalesSchema>;
 export type SalesData = z.infer<typeof SalesSchema>;
+export type UpdateSalesData = z.infer<typeof UpdateSalesSchema>;

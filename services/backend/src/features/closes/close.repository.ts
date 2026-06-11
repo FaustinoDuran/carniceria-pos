@@ -12,15 +12,16 @@ interface CloseFilters {
 
 export class CloseRepository {
     
-    async create( data : OpenClose) : Promise<Close> {
-        const { rows } = await pool.query(
+    async create( data : OpenClose, client?: PoolClient) : Promise<Close> {
+        const executor = client ?? pool
+        const { rows } = await executor.query(
             'INSERT INTO closes (start_at) VALUES ($1) RETURNING *',
             [data.start_at]
         )
         return mapToModel( Close, rows[0] )
     }
     
-    async getAll( filters?: CloseFilters ) : Promise< Close[] > {
+    async getAll( filters?: CloseFilters, client?: PoolClient ) : Promise< Close[] > {
         const conditions: string[] = []
         const values: unknown[] = []
 
@@ -38,14 +39,16 @@ export class CloseRepository {
 
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
-        const { rows } = await pool.query(
+        const executor = client ?? pool
+        const { rows } = await executor.query(
             `SELECT * FROM closes ${where} ORDER BY DATE(start_at) DESC`, values
         )
         return rows.map( row => mapToModel( Close, row))
     }
 
-    async getById(id: number): Promise< Close | null > {
-        const { rows } = await pool.query(
+    async getById(id: number, client?: PoolClient): Promise< Close | null > {
+        const executor = client ?? pool
+        const { rows } = await executor.query(
             'SELECT * FROM closes WHERE id = $1',
             [id]
         )
@@ -53,8 +56,9 @@ export class CloseRepository {
         return mapToModel(Close, rows[0])
     }
     
-    async getActive(): Promise<Close | null> {
-        const { rows } = await pool.query(
+    async getActive(client?: PoolClient): Promise<Close | null> {
+        const executor = client ?? pool
+        const { rows } = await executor.query(
             'SELECT * FROM closes WHERE end_at IS NULL'
         )
         if (rows.length === 0) return null
@@ -72,5 +76,4 @@ export class CloseRepository {
 }
 
 export const closeRepository = new CloseRepository()
-
 

@@ -51,9 +51,15 @@ export class SaleRepository {
         
     }
 
+    async getById(id: number, client?: PoolClient): Promise<Sale | null> {
+        const sales = await this.getAll({ id }, client)
+        return sales.length ? sales[0] : null
+    }
 
-    async create( data:SaleDTO ) : Promise< Sale > {
-        const { rows } = await pool.query(
+
+    async create( data:SaleDTO, client?: PoolClient ) : Promise< Sale > {
+        const executor = client ?? pool
+        const { rows } = await executor.query(
             'INSERT INTO sales (amount_meat, amount_merchandise, pay_method) VALUES ($1, $2, $3) RETURNING *',
             [data.amount_meat, data.amount_merchandise, data.pay_method]
         )
@@ -65,6 +71,40 @@ export class SaleRepository {
             'DELETE FROM sales WHERE id = $1 AND close_id IS NULL',[id]
         )
         return (rowCount ?? 0) > 0
+    }
+
+    async update(id: number, data: { amount_meat?: number; amount_merchandise?: number; pay_method?: string }, client?: PoolClient): Promise<Sale | null> {
+        const conditions: string[] = []
+        const values: unknown[] = []
+
+        if (data.amount_meat !== undefined) {
+            values.push(data.amount_meat)
+            conditions.push(`amount_meat = $${values.length}`)
+        }
+
+        if (data.amount_merchandise !== undefined) {
+            values.push(data.amount_merchandise)
+            conditions.push(`amount_merchandise = $${values.length}`)
+        }
+
+        if (data.pay_method !== undefined) {
+            values.push(data.pay_method)
+            conditions.push(`pay_method = $${values.length}`)
+        }
+
+        if (conditions.length === 0) {
+            return null
+        }
+
+        values.push(id)
+        const setClause = conditions.join(', ')
+        const executor = client ?? pool
+        const { rows } = await executor.query(
+            `UPDATE sales SET ${setClause} WHERE id = $${values.length} AND close_id IS NULL RETURNING *`,
+            values
+        )
+
+        return rows.length ? mapToModel(Sale, rows[0]) : null
     }
 
     async setClosed( close_id : number, sale_ids : number[], client?: PoolClient ) : Promise< boolean > {

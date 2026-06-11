@@ -116,4 +116,69 @@ describe('ExpenseRepository', () => {
             expect(expensesClose2[0].id).toBe(expense2.id)
         })
     })
+
+    describe('update', () => {
+        it('should update expense category', async () => {
+            const expense = await createTestExpense(500)
+
+            const updated = await expenseRepository.update(expense.id, { category: 'Updated' })
+
+            expect(updated).not.toBeNull()
+            expect(updated?.category).toBe('Updated')
+            expect(updated?.amount).toBe(500)
+        })
+
+        it('should update expense amount', async () => {
+            const expense = await createTestExpense(500)
+
+            const updated = await expenseRepository.update(expense.id, { amount: 750 })
+
+            expect(updated).not.toBeNull()
+            expect(updated?.amount).toBe(750)
+            expect(updated?.category).toBe('Test')
+        })
+
+        it('should update expense description', async () => {
+            const expense = await createTestExpense(500)
+
+            const updated = await expenseRepository.update(expense.id, { description: 'Updated description' })
+
+            expect(updated).not.toBeNull()
+            expect(updated?.description).toBe('Updated description')
+        })
+
+        it('should update multiple expense fields at once', async () => {
+            const expense = await createTestExpense(500)
+
+            const updated = await expenseRepository.update(expense.id, { 
+                category: 'New Category',
+                amount: 1000,
+                description: 'New description'
+            })
+
+            expect(updated).not.toBeNull()
+            expect(updated?.category).toBe('New Category')
+            expect(updated?.amount).toBe(1000)
+            expect(updated?.description).toBe('New description')
+        })
+
+        it('should not update an expense that is already closed', async () => {
+            const expense = await createTestExpense(500)
+            const close = await createTestClose()
+
+            await expenseRepository.setClosed(close.id, [expense.id])
+
+            const updated = await expenseRepository.update(expense.id, { amount: 750 })
+
+            expect(updated).toBeNull()
+        })
+
+        it('should return null when no fields are provided for update', async () => {
+            const expense = await createTestExpense(500)
+
+            const updated = await expenseRepository.update(expense.id, {})
+
+            expect(updated).toBeNull()
+        })
+    })
 })

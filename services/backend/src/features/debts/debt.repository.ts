@@ -11,6 +11,7 @@ interface DebtFilters {
     customer_id?:number,
     status?: DebtData['status'],
     id?: number
+    close_id?: number
 }
 
 interface DebtPaymentEventFilters {
@@ -40,29 +41,36 @@ export class DebtRepository {
 
         if(filters?.customer_id){
             values.push(filters.customer_id)
-            conditions.push(`customer_id = $${values.length}`)
+            conditions.push(`debts.customer_id = $${values.length}`)
         }
 
         if(filters?.status) {
             values.push(filters.status)
-            conditions.push(`status = $${values.length}`)
+            conditions.push(`debts.status = $${values.length}`)
         }
 
         if (filters?.id !== undefined) {
             values.push(filters.id)
-            conditions.push(`id = $${values.length}`)
+            conditions.push(`debts.id = $${values.length}`)
+        }
+
+        if (filters?.close_id !== undefined) {
+            values.push(filters.close_id)
+            conditions.push(`sales.close_id = $${values.length}`)
         }
 
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+        const join = filters?.close_id !== undefined ? 'INNER JOIN sales ON sales.id = debts.sales_id' : ''
 
         const { rows } = await pool.query(
-            `SELECT * FROM debts ${where} ORDER BY created_at DESC`, values
+            `SELECT debts.* FROM debts ${join} ${where} ORDER BY debts.created_at DESC`, values
         )
         return rows.map( row => mapToModel( Debt, row))
     }
 
-    async create( data : DebtDTO ): Promise< Debt > {
-        const { rows } = await pool.query(
+    async create( data : DebtDTO, client?: PoolClient ): Promise< Debt > {
+        const executor = client ?? pool
+        const { rows } = await executor.query(
             `INSERT INTO debts (sales_id, customer_id, amount) VALUES ($1, $2, $3) RETURNING *`, 
             [data.sales_id, data.customer_id, data.amount]
 

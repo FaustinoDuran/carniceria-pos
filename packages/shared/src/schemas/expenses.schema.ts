@@ -14,7 +14,14 @@ export const ExpensesSchema = CreateExpensesSchema.extend({
 })
 
 
+export const UpdateExpensesSchema = z.object({
+    category: z.string().min(3, 'Category is required').optional(),
+    amount: z.number().positive('Amount must be a positive number').optional(),
+    description: z.string().optional(),
+})
+
 export type CreateExpensesData = z.infer<typeof CreateExpensesSchema>;
 export type ExpensesData = z.infer<typeof ExpensesSchema>
+export type UpdateExpensesData = z.infer<typeof UpdateExpensesSchema>;
 
 
