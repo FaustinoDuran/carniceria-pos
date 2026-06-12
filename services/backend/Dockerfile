@@ -4,7 +4,6 @@ WORKDIR /app
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 COPY package.json package-lock.json ./
-COPY apps/desktop/package.json apps/desktop/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY services/backend/package.json services/backend/package.json
@@ -48,7 +47,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-COPY apps/desktop/package.json apps/desktop/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY services/backend/package.json services/backend/package.json

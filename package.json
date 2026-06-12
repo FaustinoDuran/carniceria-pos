@@ -5,8 +5,7 @@
     "workspaces": [
         "packages/*",
         "services/backend",
-        "apps/frontend",
-        "apps/desktop"
+        "apps/frontend"
     ],
     "scripts": {
         "build": "npm --workspace=@carniceria/shared run build && npm --workspace=services/backend run build && npm --workspace=apps/frontend run build",

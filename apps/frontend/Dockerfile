@@ -13,7 +13,6 @@ ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 ENV VITE_SUPABASE_AUTH_ENABLED=$VITE_SUPABASE_AUTH_ENABLED
 
 COPY package.json package-lock.json ./
-COPY apps/desktop/package.json apps/desktop/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY services/backend/package.json services/backend/package.json
