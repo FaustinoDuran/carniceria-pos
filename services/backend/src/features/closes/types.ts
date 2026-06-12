@@ -1,8 +1,16 @@
 import { Close } from './models/close.model'
 import { Sale } from '../sales/models/sale.model'
 import { Expense } from '../expenses/models/expense.model'
-import { Debt } from '../debts/models/debt.model'
-import { DebtPaymentEvent } from '../debts/models/debtPaymentEvent.model'
+import { DebtData, DebtPaymentEventData } from '@carniceria/shared'
+
+export interface CloseReportGeneratedDebt extends DebtData {
+  customer_name: string
+}
+
+export interface CloseReportPaidDebt extends DebtPaymentEventData {
+  customer_id: number
+  customer_name: string
+}
 
 export interface SalesByPayMethod {
   cash: Sale[]
@@ -32,8 +40,8 @@ export interface CloseReportData {
     byPayMethod: SalesByPayMethod
   }
   debts: {
-    generated: Debt[]
-    paid: DebtPaymentEvent[]
+    generated: CloseReportGeneratedDebt[]
+    paid: CloseReportPaidDebt[]
   }
   expenses: Expense[]
   summary: CloseSummary

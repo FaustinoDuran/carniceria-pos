@@ -97,8 +97,8 @@ export class CloseService implements ICloseService {
 
     const sales = await saleRepository.getAll({ close_id: id })
     const expenses = await expenseRepository.getAll({ close_id: id })
-    const generatedDebts = await debtRepository.getAll({ close_id: id })
-    const paidDebts = await debtRepository.getPaymentEvents({ close_id: id })
+    const generatedDebts = await debtRepository.getGeneratedForCloseReport(id)
+    const paidDebts = await debtRepository.getPaidForCloseReport(id)
 
     const cashSales = sales.filter((sale) => sale.pay_method === 'cash')
     const transferSales = sales.filter((sale) => sale.pay_method === 'transfer')

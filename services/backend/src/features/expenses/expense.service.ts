@@ -6,7 +6,7 @@ import { closeRepository } from '../closes/close.repository'
 import { BusinessError, NotFoundError } from '../../shared/errors'
 
 export class ExpenseService implements IExpensesServies {
-    async create(data: ExpenseDTO): Promise<Expense> {
+    async create(data: unknown): Promise<Expense> {
         
         const activeClose = await closeRepository.getActive()
         if (!activeClose) {
@@ -18,7 +18,7 @@ export class ExpenseService implements IExpensesServies {
         return expenseRepository.create(dto)
     }
 
-    async update(id: number, data: UpdateExpenseDTO): Promise<Expense> {
+    async update(id: number, data: unknown): Promise<Expense> {
         const expense = await expenseRepository.getById(id)
         if (!expense) {
             throw new NotFoundError('Expense not found')
@@ -61,7 +61,15 @@ export class ExpenseService implements IExpensesServies {
     }
 
     async search(filters?: ExpenseFilters): Promise<Expense[]> {
-        return expenseRepository.getAll(filters)
+        if (!filters) {
+            return expenseRepository.getAll(undefined)
+        }
+
+        return expenseRepository.getAll({
+            category: filters.category,
+            close_id: filters.close_id,
+            created_at: filters.date,
+        })
     }
 
     async getById(id: number): Promise<Expense> {

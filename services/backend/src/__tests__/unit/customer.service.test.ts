@@ -2,7 +2,7 @@ import { customerService } from '../../features/customers/customer.service'
 import { customerRepository } from '../../features/customers/customer.repository'
 import { debtRepository } from '../../features/debts/debt.repository'
 import { NotFoundError, BusinessError } from '../../shared/errors'
-import { mockCustomer, mockCustomerDTO, mockDebt } from './mocks'
+import { mockCustomer, mockCustomerDTO } from './mocks'
 
 
 
@@ -81,11 +81,12 @@ describe('CustomerService', () => {
     describe('delete', () => {
         it('should delete customer when exists and has no debts', async () => {
             vi.spyOn(customerRepository, 'getById').mockResolvedValue(mockCustomer as any)
-            vi.spyOn(debtRepository, 'getAll').mockResolvedValue([])
+            vi.spyOn(debtRepository, 'hasActiveByCustomer').mockResolvedValue(false)
             vi.spyOn(customerRepository, 'softDelete').mockResolvedValue(true)
 
             await expect(customerService.delete(1)).resolves.not.toThrow()
 
+            expect(debtRepository.hasActiveByCustomer).toHaveBeenCalledWith(1)
             expect(customerRepository.softDelete).toHaveBeenCalledWith(1)   
         })
 
@@ -97,7 +98,7 @@ describe('CustomerService', () => {
 
         it('should throw BusinessError when customer has active debts', async () => {
             vi.spyOn(customerRepository, 'getById').mockResolvedValue(mockCustomer as any)
-            vi.spyOn(debtRepository, 'getAll').mockResolvedValue([mockDebt])
+            vi.spyOn(debtRepository, 'hasActiveByCustomer').mockResolvedValue(true)
 
             await expect(customerService.delete(1)).rejects.toThrow(BusinessError)
             expect(customerRepository.softDelete).not.toHaveBeenCalled()
@@ -105,5 +106,3 @@ describe('CustomerService', () => {
     })
 })
     
-
-

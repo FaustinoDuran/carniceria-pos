@@ -6,6 +6,7 @@ import { DebtPaymentEvent } from '../../features/debts/models/debtPaymentEvent.m
 import { RecordDebtPayment } from '../../features/debts/models/recordDebtPayment.model'
 import { Close } from '../../features/closes/models/close.model'
 import { Sale } from '../../features/sales/models/sale.model'
+import { SaleDetail } from '../../features/sale-details/models/sale-detail.model'
 import { SaleDTO, UpdateSaleDTO } from '../../features/sales/models/sale.dto'
 import { Expense } from '../../features/expenses/models/expense.model'
 import { ExpenseDTO, UpdateExpenseDTO } from '../../features/expenses/models/expense.dto'
@@ -52,6 +53,19 @@ export const createMockSale = (overrides?: Partial<any>): Sale => {
         amount_merchandise: 0,
         pay_method: 'cash',     // SalesSchema: z.enum(['cash', 'credit', 'cc', 'debit', 'transfer'])
         close_id: null,
+        created_at: new Date(),
+        ...overrides,
+    })
+}
+
+export const createMockSaleDetail = (overrides?: Partial<any>): SaleDetail => {
+    return new SaleDetail({
+        id: Math.floor(Math.random() * 1000) + 1,
+        sale_id: 1,
+        cut_name: 'Asado',
+        price_per_kg: 1000,
+        weight_kg: 2,
+        subtotal: 2000,
         created_at: new Date(),
         ...overrides,
     })
@@ -167,8 +181,13 @@ const mockReportCashSale = createMockSale({ pay_method: 'cash', amount_meat: 600
 const mockReportTransferSale = createMockSale({ pay_method: 'transfer', amount_meat: 300, amount_merchandise: 0 })
 const mockReportCardSale = createMockSale({ pay_method: 'credit', amount_meat: 200, amount_merchandise: 0 })
 const mockReportCcSale = createMockSale({ pay_method: 'cc', amount_meat: 0, amount_merchandise: 100 })
-const mockReportGeneratedDebt = createMockDebt({ amount: 1500 })
-const mockReportPaidDebt = createMockDebtPaymentEvent({ paid_amount: 100 })
+const mockReportGeneratedDebt = Object.assign(createMockDebt({ amount: 1500 }), {
+    customer_name: 'Juan Perez',
+})
+const mockReportPaidDebt = Object.assign(createMockDebtPaymentEvent({ paid_amount: 100 }), {
+    customer_id: 1,
+    customer_name: 'Juan Perez',
+})
 const mockReportExpense = createMockExpense({ amount: 300 })
 
 export const mockCloseReportData = {

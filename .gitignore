@@ -1,6 +1,9 @@
 node_modules
 dist
+*.tsbuildinfo
 .env
+.env.*
+!.env.production.example
 *.env
 .agents
 AGENTS.md

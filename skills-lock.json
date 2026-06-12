@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
+    },
     "nodejs-backend-patterns": {
       "source": "wshobson/agents",
       "sourceType": "github",
@@ -11,15 +17,34 @@
       "sourceType": "github",
       "computedHash": "94af4eda308df6d27b94cc866de0d3d857755c91da01808d3d8130d91ebaf231"
     },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase/SKILL.md",
+      "computedHash": "d414d598b9428b3e851c4ce61898649906b19e55aa7415bb42a286bd9ca2ab32"
+    },
     "supabase-postgres-best-practices": {
       "source": "supabase/agent-skills",
       "sourceType": "github",
-      "computedHash": "d606a1146be6d54fb9e73f718b5320b9acac5ff2ba2d7230a555df4b5a923b4a"
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "0d2c4857a7d6fdcd3fbc46e458fa4c497f029cab89a01548b3defce203003932"
+    },
+    "tailwind": {
+      "source": "heygen-com/hyperframes",
+      "sourceType": "github",
+      "skillPath": "skills/tailwind/SKILL.md",
+      "computedHash": "97bf0007f24e6275dcabc084c4d42f434ba48a84cec5a5b060036220239d6ddc"
     },
     "typescript-expert": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
       "computedHash": "b286805fbc1e24cdbe238445c62f27889cdc48dac9dfb77fc927bd1b3c37ab2a"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
     },
     "vitest": {
       "source": "antfu/skills",

@@ -1,13 +1,16 @@
 import { Customer} from './models/customer.model';
-import { CustomerDTO } from './models/customer.dto';
 
 export interface CustomerFilters {
     name?: string ;
+    dni?: string ;
+    deleted?: boolean ;
 }
 
 export interface ICustomerService {
-    register( data : CustomerDTO) : Promise< Customer >;
+    register( data : unknown) : Promise< Customer >;
     search(filters : CustomerFilters) : Promise< Customer[] >;
     getById(id: number) : Promise< Customer >;
+    update(id: number, data: unknown) : Promise< Customer >;
     delete( id : number ) : Promise< void >;
+    restore( id : number ) : Promise< Customer >;
 }

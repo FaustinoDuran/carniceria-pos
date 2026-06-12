@@ -1,4 +1,3 @@
-import { ExpenseDTO, UpdateExpenseDTO } from './models/expense.dto'
 import { Expense } from './models/expense.model'
 
 export interface ExpenseFilters {
@@ -8,8 +7,8 @@ export interface ExpenseFilters {
 }
 
 export interface IExpensesServies { 
-    create(data : ExpenseDTO): Promise<Expense>
-    update(id: number, data : UpdateExpenseDTO) : Promise<Expense>
+    create(data : unknown): Promise<Expense>
+    update(id: number, data : unknown) : Promise<Expense>
     delete(id: number): Promise<void>
     search(filter? : ExpenseFilters) : Promise<Expense[]>
     getById(id : number) : Promise<Expense>

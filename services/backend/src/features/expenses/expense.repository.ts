@@ -7,6 +7,7 @@ import { PoolClient } from 'pg';
 export interface ExpenseFilters {
     close_id?: number | null
     id?: number
+    category?: string
     created_at?: Date 
 
 }
@@ -31,6 +32,11 @@ export class ExpenseRepository {
         if (filters?.id !== undefined) {
             values.push(filters.id)
             conditions.push(`id = $${values.length}`)
+        }
+
+        if (filters?.category !== undefined) {
+            values.push(filters.category)
+            conditions.push(`category = $${values.length}`)
         }
 
         if(filters?.created_at) {

@@ -2,16 +2,18 @@ import { saleService } from '../../features/sales/sale.service'
 import { saleRepository } from '../../features/sales/sale.repository'
 import { saleDetailRepository } from '../../features/sale-details/sale-detail.repository'
 import { debtService } from '../../features/debts/debt.service'
+import { debtRepository } from '../../features/debts/debt.repository'
 import { closeService } from '../../features/closes/close.service'
 import { withTransaction } from '../../shared/transaction.helper'
 import { SaleDTO, UpdateSaleDTO } from '../../features/sales/models/sale.dto'
-import { createMockSale, mockSaleDTO, mockUpdateSaleDTO, createMockCloseOpening } from './mocks'
+import { createMockSale, mockSaleDTO, mockUpdateSaleDTO, createMockCloseOpening, createMockSaleDetail, createMockDebtPaymentEvent } from './mocks'
 import { BusinessError, NotFoundError } from '../../shared/errors'
 import { mockDebt } from './mocks'
 
 vi.mock('../../features/sales/sale.repository')
 vi.mock('../../features/sale-details/sale-detail.repository')
 vi.mock('../../features/debts/debt.service')
+vi.mock('../../features/debts/debt.repository')
 vi.mock('../../features/closes/close.service')
 vi.mock('../../shared/transaction.helper', () => ({
     withTransaction: vi.fn(),
@@ -111,6 +113,7 @@ describe('SaleService', () => {
             const updatedSale = createMockSale({ id: 1, pay_method: 'cash', amount_meat: 20, amount_merchandise: 50, close_id: null })
 
             vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(debtRepository.hasBySaleId).mockResolvedValue(false)
             vi.mocked(saleRepository.update).mockResolvedValue(updatedSale)
             vi.mocked(saleDetailRepository.deleteBySaleId).mockResolvedValue(undefined)
             vi.mocked(saleDetailRepository.createMany).mockResolvedValue([])
@@ -132,6 +135,7 @@ describe('SaleService', () => {
             const updatedSale = createMockSale({ id: 1, pay_method: 'cc', amount_meat: 100, amount_merchandise: 50, close_id: null })
 
             vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(debtRepository.hasBySaleId).mockResolvedValue(false)
             vi.mocked(saleRepository.update).mockResolvedValue(updatedSale)
             vi.mocked(debtService.create).mockResolvedValue(mockDebt)
 
@@ -162,6 +166,15 @@ describe('SaleService', () => {
             vi.mocked(saleRepository.getById).mockResolvedValue(sale)
 
             await expect(saleService.update(1, mockUpdateSaleDTO)).rejects.toThrow(BusinessError)
+        })
+
+        it('should throw BusinessError when updating a sale with current account debt', async () => {
+            const sale = createMockSale({ id: 1, pay_method: 'cc', close_id: null })
+            vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(debtRepository.hasBySaleId).mockResolvedValue(true)
+
+            await expect(saleService.update(1, mockUpdateSaleDTO)).rejects.toThrow(BusinessError)
+            expect(saleRepository.update).not.toHaveBeenCalled()
         })
     })
 
@@ -194,15 +207,91 @@ describe('SaleService', () => {
         })
     })
 
+    describe('getRemitoData', () => {
+        it('should return sale, details and customer data for remito printing', async () => {
+            const sale = createMockSale({ id: 1 })
+            const details = [createMockSaleDetail({ sale_id: 1 })]
+            const customer = { id: 9, name: 'Ana', last_name: 'Lopez' }
+
+            vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(saleDetailRepository.getBySaleId).mockResolvedValue(details)
+            vi.mocked(debtRepository.getCustomerBySaleId).mockResolvedValue(customer)
+
+            const result = await saleService.getRemitoData(1)
+
+            expect(result).toEqual({ sale, details, customer })
+            expect(saleRepository.getById).toHaveBeenCalledWith(1)
+            expect(saleDetailRepository.getBySaleId).toHaveBeenCalledWith(1)
+            expect(debtRepository.getCustomerBySaleId).toHaveBeenCalledWith(1)
+        })
+
+        it('should return null customer when sale is not linked to a current account debt', async () => {
+            const sale = createMockSale({ id: 1 })
+            const details = [createMockSaleDetail({ sale_id: 1 })]
+
+            vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(saleDetailRepository.getBySaleId).mockResolvedValue(details)
+            vi.mocked(debtRepository.getCustomerBySaleId).mockResolvedValue(null)
+
+            const result = await saleService.getRemitoData(1)
+
+            expect(result.customer).toBeNull()
+        })
+
+        it('should throw NotFoundError when sale does not exist for remito printing', async () => {
+            vi.mocked(saleRepository.getById).mockResolvedValue(null)
+
+            await expect(saleService.getRemitoData(1)).rejects.toThrow(NotFoundError)
+            expect(saleDetailRepository.getBySaleId).not.toHaveBeenCalled()
+        })
+
+        it('should throw BusinessError when sale has no details', async () => {
+            const sale = createMockSale({ id: 1 })
+            vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(saleDetailRepository.getBySaleId).mockResolvedValue([])
+
+            await expect(saleService.getRemitoData(1)).rejects.toThrow(BusinessError)
+            expect(debtRepository.getCustomerBySaleId).not.toHaveBeenCalled()
+        })
+    })
+
     describe('delete', () => {
         it('should delete an open sale', async () => {
             const sale = createMockSale({ id: 1, close_id: null })
             vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(debtRepository.getBySaleIdForUpdate).mockResolvedValue(null)
             vi.mocked(saleRepository.delete).mockResolvedValue(true)
 
             await saleService.delete(1)
 
-            expect(saleRepository.delete).toHaveBeenCalledWith(1)
+            expect(debtRepository.getBySaleIdForUpdate).toHaveBeenCalledWith(1, mockClient)
+            expect(saleRepository.delete).toHaveBeenCalledWith(1, mockClient)
+        })
+
+        it('should delete an open current account sale when the related debt has no payments', async () => {
+            const sale = createMockSale({ id: 1, close_id: null, pay_method: 'cc' })
+            vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(debtRepository.getBySaleIdForUpdate).mockResolvedValue({ id: 10 })
+            vi.mocked(debtRepository.getPaymentEvents).mockResolvedValue([])
+            vi.mocked(debtRepository.delete).mockResolvedValue(true)
+            vi.mocked(saleRepository.delete).mockResolvedValue(true)
+
+            await saleService.delete(1)
+
+            expect(debtRepository.getPaymentEvents).toHaveBeenCalledWith({ debt_id: 10 }, mockClient)
+            expect(debtRepository.delete).toHaveBeenCalledWith(10, mockClient)
+            expect(saleRepository.delete).toHaveBeenCalledWith(1, mockClient)
+        })
+
+        it('should throw BusinessError when deleting a sale with recorded debt payments', async () => {
+            const sale = createMockSale({ id: 1, close_id: null, pay_method: 'cc' })
+            vi.mocked(saleRepository.getById).mockResolvedValue(sale)
+            vi.mocked(debtRepository.getBySaleIdForUpdate).mockResolvedValue({ id: 10 })
+            vi.mocked(debtRepository.getPaymentEvents).mockResolvedValue([createMockDebtPaymentEvent({ debt_id: 10 })])
+
+            await expect(saleService.delete(1)).rejects.toThrow(BusinessError)
+            expect(debtRepository.delete).not.toHaveBeenCalled()
+            expect(saleRepository.delete).not.toHaveBeenCalled()
         })
 
         it('should throw BusinessError when deleting a closed sale', async () => {

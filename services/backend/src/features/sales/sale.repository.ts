@@ -66,8 +66,9 @@ export class SaleRepository {
         return mapToModel( Sale,rows[0] )
     }
 
-    async delete( id : number ) : Promise< boolean > {
-        const { rowCount } = await pool.query(
+    async delete( id : number, client?: PoolClient ) : Promise< boolean > {
+        const executor = client ?? pool
+        const { rowCount } = await executor.query(
             'DELETE FROM sales WHERE id = $1 AND close_id IS NULL',[id]
         )
         return (rowCount ?? 0) > 0

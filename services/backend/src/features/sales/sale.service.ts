@@ -3,6 +3,7 @@ import { PoolClient } from 'pg'
 import { saleRepository } from './sale.repository'
 import { saleDetailRepository } from '../sale-details/sale-detail.repository'
 import { debtService } from '../debts/debt.service'
+import { debtRepository } from '../debts/debt.repository'
 import { closeService } from '../closes/close.service'
 import { DebtDTO } from '../debts/models/debt.dto'
 import { Sale } from './models/sale.model'
@@ -11,7 +12,7 @@ import { SaleDetailDTO } from '../sale-details/models/sale-detail.dto'
 import { withTransaction } from '../../shared/transaction.helper'
 import { BusinessError, NotFoundError } from '../../shared/errors'
 import { SaleFilters } from './types'
-import { ISaleService, SaleDetailInput } from './sale.service.interface'
+import { ISaleService, SaleDetailInput, SaleRemitoData } from './sale.service.interface'
 
 export class SaleService implements ISaleService {
     private calculateMeatAmount(details: SaleDetailDTO[]): number {
@@ -42,7 +43,7 @@ export class SaleService implements ISaleService {
         await debtService.create(debtDto, client)
     }
 
-    async create(data: SaleDTO, details?: SaleDetailInput[], customer_id?: number): Promise<Sale> {
+    async create(data: unknown, details?: SaleDetailInput[], customer_id?: number): Promise<Sale> {
         const dto = new SaleDTO(data)
         const detailDtos = (details ?? []).map((detail) => new SaleDetailDTO(detail))
         const amount_meat = detailDtos.length ? this.calculateMeatAmount(detailDtos) : dto.amount_meat
@@ -79,7 +80,7 @@ export class SaleService implements ISaleService {
 
     async update(
         id: number,
-        data: UpdateSaleDTO,
+        data: unknown,
         details?: SaleDetailInput[],
         customer_id?: number,
     ): Promise<Sale> {
@@ -91,6 +92,11 @@ export class SaleService implements ISaleService {
 
         if (sale.close_id !== null) {
             throw new BusinessError('Cannot update a closed sale')
+        }
+
+        const hasDebt = await debtRepository.hasBySaleId(id)
+        if (hasDebt) {
+            throw new BusinessError('Cannot update a sale with current account debt')
         }
 
         const dto = new UpdateSaleDTO(data)
@@ -149,20 +155,32 @@ export class SaleService implements ISaleService {
     }
 
     async delete(id: number): Promise<void> {
-        const sale = await saleRepository.getById(id)
+        await withTransaction(async (client) => {
+            const sale = await saleRepository.getById(id, client)
 
-        if (!sale) {
-            throw new NotFoundError('Sale not found')
-        }
+            if (!sale) {
+                throw new NotFoundError('Sale not found')
+            }
 
-        if (sale.close_id !== null) {
-            throw new BusinessError('Cannot delete a closed sale')
-        }
+            if (sale.close_id !== null) {
+                throw new BusinessError('Cannot delete a closed sale')
+            }
 
-        const deleted = await saleRepository.delete(id)
-        if (!deleted) {
-            throw new BusinessError('Sale could not be deleted')
-        }
+            const debt = await debtRepository.getBySaleIdForUpdate(id, client)
+            if (debt) {
+                const paymentEvents = await debtRepository.getPaymentEvents({ debt_id: debt.id }, client)
+                if (paymentEvents.length > 0) {
+                    throw new BusinessError('Cannot delete a sale with recorded debt payments')
+                }
+
+                await debtRepository.delete(debt.id, client)
+            }
+
+            const deleted = await saleRepository.delete(id, client)
+            if (!deleted) {
+                throw new BusinessError('Sale could not be deleted')
+            }
+        })
     }
 
     async search(filters?: SaleFilters): Promise<Sale[]> {
@@ -175,6 +193,35 @@ export class SaleService implements ISaleService {
             throw new NotFoundError('Sale not found')
         }
         return sale
+    }
+
+    async getDetails(id: number) {
+        const sale = await saleRepository.getById(id)
+        if (!sale) {
+            throw new NotFoundError('Sale not found')
+        }
+
+        return saleDetailRepository.getBySaleId(id)
+    }
+
+    async getRemitoData(id: number): Promise<SaleRemitoData> {
+        const sale = await saleRepository.getById(id)
+        if (!sale) {
+            throw new NotFoundError('Sale not found')
+        }
+
+        const details = await saleDetailRepository.getBySaleId(id)
+        if (!details.length) {
+            throw new BusinessError('El remito solo se puede imprimir para ventas con detalle de cortes')
+        }
+
+        const customer = await debtRepository.getCustomerBySaleId(id)
+
+        return {
+            sale,
+            details,
+            customer,
+        }
     }
 }
 

@@ -21,6 +21,7 @@ export interface DebtPaymentEventFilters {
 export interface IDebtService {
     create(data: DebtDTO, client?: PoolClient): Promise<Debt>
     search(filters?: DebtFilters): Promise<Debt[]>
-    recordPayment(id: number, close_id: number, data: RecordDebtPayment): Promise<DebtPaymentEvent | null>
+    getById(id: number): Promise<Debt>
+    recordPayment(id: number, close_id: number, data: unknown): Promise<DebtPaymentEvent | null>
     getPaymentEvents(filters?: DebtPaymentEventFilters): Promise<DebtPaymentEvent[]>
 }

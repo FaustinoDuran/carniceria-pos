@@ -7,6 +7,7 @@ import { Debt } from './models/debt.model'
 import { DebtDTO } from './models/debt.dto'
 import { DebtPaymentEvent } from './models/debtPaymentEvent.model'
 import { RecordDebtPayment } from './models/recordDebtPayment.model'
+import { NotFoundError } from '../../shared/errors'
 
 export class DebtService implements IDebtService {
     async create(data: DebtDTO, client?: PoolClient): Promise<Debt> {
@@ -18,7 +19,17 @@ export class DebtService implements IDebtService {
         return debtRepository.getAll(filters)
     }
 
-    async recordPayment(id: number, close_id: number, data: RecordDebtPayment): Promise<DebtPaymentEvent | null> {
+    async getById(id: number): Promise<Debt> {
+        const debt = await debtRepository.getById(id)
+
+        if (!debt) {
+            throw new NotFoundError('Debt not found')
+        }
+
+        return debt
+    }
+
+    async recordPayment(id: number, close_id: number, data: unknown): Promise<DebtPaymentEvent | null> {
         const paymentData = new RecordDebtPayment(data)
 
         return withTransaction(async (client) => {

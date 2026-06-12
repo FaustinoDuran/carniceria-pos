@@ -9,11 +9,15 @@
         "apps/desktop"
     ],
     "scripts": {
+        "build": "npm --workspace=@carniceria/shared run build && npm --workspace=services/backend run build && npm --workspace=apps/frontend run build",
+        "dev": "npm --workspace=@carniceria/shared run build && (npm run dev:backend & npm run dev:frontend & wait)",
+        "dev:backend": "npm --workspace=services/backend run dev",
+        "dev:backend:supabase": "npm --workspace=services/backend run dev:supabase",
+        "dev:frontend": "npm --workspace=apps/frontend run dev",
+        "dev:supabase": "npm --workspace=@carniceria/shared run build && (npm run dev:backend:supabase & npm run dev:frontend & wait)",
         "test": "npm --workspace=services/backend run test",
         "test:integration": "npm --workspace=services/backend run test:integration",
         "test:coverage": "npm --workspace=services/backend run test:coverage",
-        "test:unit": "npm --workspace=services/backend run test:unit",
-        "dev": "npm run test:unit && npm run test:integration"
+        "test:unit": "npm --workspace=services/backend run test:unit"
     }
 }
-
