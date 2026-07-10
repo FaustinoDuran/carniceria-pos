@@ -41,9 +41,19 @@ export class SaleRepository {
             ? `WHERE ${conditions.join(' AND ')}`
             : ''
 
-        const executor = client ?? pool 
+        let pagination = ''
+        if (filters?.limit !== undefined) {
+            values.push(filters.limit)
+            pagination += ` LIMIT $${values.length}`
+        }
+        if (filters?.offset !== undefined) {
+            values.push(filters.offset)
+            pagination += ` OFFSET $${values.length}`
+        }
+
+        const executor = client ?? pool
         const { rows } = await executor.query(
-            `SELECT * FROM sales ${where} ORDER BY created_at DESC`,
+            `SELECT * FROM sales ${where} ORDER BY created_at DESC${pagination}`,
             values
         )
 

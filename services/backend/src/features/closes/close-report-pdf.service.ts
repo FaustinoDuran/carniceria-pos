@@ -56,31 +56,124 @@ function emptyRow(columns: number, message: string): string {
     return `<tr><td colspan="${columns}" class="empty">${escapeHtml(message)}</td></tr>`
 }
 
+// Ordena los movimientos por hora, de mas temprano a mas tarde.
+function byTimeAsc<T extends { created_at: Date | null | undefined }>(items: T[]): T[] {
+    return [...items].sort((a, b) => {
+        const timeA = a.created_at ? a.created_at.getTime() : 0
+        const timeB = b.created_at ? b.created_at.getTime() : 0
+        return timeA - timeB
+    })
+}
+
 function renderSummary(report: CloseReportData): string {
     const { summary } = report
 
-    const rows = [
-        ['Total ventas', summary.totalSales],
-        ['Ventas efectivo', summary.totalCash],
-        ['Ventas transferencia', summary.totalTransfer],
-        ['Ventas tarjeta', summary.totalCard],
-        ['Cuenta corriente generada', summary.totalDebtGenerated],
-        ['Deudas cobradas', summary.totalDebtPaid],
-        ['Gastos', summary.totalExpenses],
-        ['Ingreso real', summary.realIncome],
-        ['Efectivo esperado', summary.expectedCash],
+    const rows: Array<[string, number | null, string]> = [
+        ['Total ventas', summary.totalSales, ''],
+        ['Ventas efectivo', summary.totalCash, ''],
+        ['Ventas transferencia', summary.totalTransfer, ''],
+        ['Ventas tarjeta', summary.totalCard, ''],
+        ['Cuenta corriente generada', summary.totalDebtGenerated, ''],
+        ['Deudas cobradas', summary.totalDebtPaid, ''],
+        ['Gastos', summary.totalExpenses, 'neg'],
+        ['Ingreso real', summary.realIncome, 'pos'],
+        ['Efectivo esperado', summary.expectedCash, ''],
     ]
 
-    return rows.map(([label, value]) => `
+    return rows.map(([label, value, tone]) => `
         <div class="summary-item">
             <span>${escapeHtml(label)}</span>
-            <strong>${formatMoney(value as number | null)}</strong>
+            <strong class="${tone}">${formatMoney(value)}</strong>
         </div>
     `).join('')
 }
 
+function renderPayMethodBreakdown(report: CloseReportData): string {
+    const { sales, summary } = report
+
+    const rows: Array<[string, number, number]> = [
+        ['Efectivo', sales.byPayMethod.cash.length, summary.totalCash],
+        ['Tarjeta', sales.byPayMethod.card.length, summary.totalCard],
+        ['Transferencia', sales.byPayMethod.transfer.length, summary.totalTransfer],
+        ['Cuenta corriente', sales.byPayMethod.cc.length, summary.totalDebtGenerated],
+    ]
+
+    const body = rows.map(([label, count, amount]) => `
+        <tr>
+            <td>${escapeHtml(label)}</td>
+            <td class="number">${count}</td>
+            <td class="number">${formatMoney(amount)}</td>
+        </tr>
+    `).join('')
+
+    return `
+        ${body}
+        <tr class="subtotal">
+            <td>Total</td>
+            <td class="number">${sales.all.length}</td>
+            <td class="number">${formatMoney(summary.totalSales)}</td>
+        </tr>
+    `
+}
+
+function renderCashCheck(report: CloseReportData): string {
+    const { summary } = report
+
+    if (summary.expectedCash === null || summary.expectedCash === undefined) {
+        return '<strong>Arqueo de caja:</strong> efectivo fisico sin registrar en este cierre.'
+    }
+
+    const difference = Number((summary.expectedCash - summary.totalCash).toFixed(2))
+    const tone = difference < 0 ? 'neg' : 'pos'
+    const label = difference < 0 ? 'Faltante' : difference > 0 ? 'Sobrante' : 'Sin diferencia'
+
+    return `
+        <strong>Arqueo de caja:</strong>
+        efectivo fisico ${formatMoney(summary.expectedCash)} &minus; ventas en efectivo ${formatMoney(summary.totalCash)}
+        = <strong class="${tone}">${formatMoney(difference)}</strong> (${label})
+    `
+}
+
+function renderBalance(report: CloseReportData): string {
+    const { summary } = report
+
+    const totalIncome = Number((summary.totalSales + summary.totalDebtPaid).toFixed(2))
+    const totalOutflow = Number((summary.totalExpenses + summary.totalDebtGenerated + summary.realIncome).toFixed(2))
+    const balance = Number((totalIncome - totalOutflow).toFixed(2))
+    const tone = balance < 0 ? 'neg' : 'pos'
+
+    const rows: Array<[string, number | null, number | null]> = [
+        ['Total ventas', summary.totalSales, null],
+        ['Deudas cobradas', summary.totalDebtPaid, null],
+        ['Gastos', null, summary.totalExpenses],
+        ['Cuenta corriente generada', null, summary.totalDebtGenerated],
+        ['Ingreso real (resultado)', null, summary.realIncome],
+    ]
+
+    const body = rows.map(([label, income, outflow]) => `
+        <tr>
+            <td>${escapeHtml(label)}</td>
+            <td class="number">${income === null ? '&mdash;' : formatMoney(income)}</td>
+            <td class="number">${outflow === null ? '&mdash;' : formatMoney(outflow)}</td>
+        </tr>
+    `).join('')
+
+    return `
+        ${body}
+        <tr class="subtotal">
+            <td>Totales</td>
+            <td class="number">${formatMoney(totalIncome)}</td>
+            <td class="number">${formatMoney(totalOutflow)}</td>
+        </tr>
+        <tr class="subtotal">
+            <td>Balance</td>
+            <td class="number balance-cell ${tone}" colspan="2">${formatMoney(balance)}</td>
+        </tr>
+    `
+}
+
 function renderSales(report: CloseReportData): string {
-    const rows = report.sales.all.map((sale) => {
+    const rows = byTimeAsc(report.sales.all).map((sale) => {
         const total = sale.amount_meat + sale.amount_merchandise
 
         return `
@@ -114,7 +207,7 @@ function renderSalesSubtotal(report: CloseReportData): string {
 }
 
 function renderMeatSales(report: CloseReportData): string {
-    const rows = report.sales.all
+    const rows = byTimeAsc(report.sales.all)
         .filter((sale) => sale.amount_meat > 0)
         .map((sale) => `
             <tr>
@@ -140,7 +233,7 @@ function renderMeatSalesSubtotal(report: CloseReportData): string {
 }
 
 function renderMerchandiseSales(report: CloseReportData): string {
-    const rows = report.sales.all
+    const rows = byTimeAsc(report.sales.all)
         .filter((sale) => sale.amount_merchandise > 0)
         .map((sale) => `
             <tr>
@@ -166,7 +259,7 @@ function renderMerchandiseSalesSubtotal(report: CloseReportData): string {
 }
 
 function renderExpenses(report: CloseReportData): string {
-    const rows = report.expenses.map((expense) => `
+    const rows = byTimeAsc(report.expenses).map((expense) => `
         <tr>
             <td>#${expense.id}</td>
             <td>${formatDate(expense.created_at)}</td>
@@ -191,7 +284,7 @@ function renderExpensesSubtotal(report: CloseReportData): string {
 }
 
 function renderGeneratedDebts(report: CloseReportData): string {
-    const rows = report.debts.generated.map((debt) => `
+    const rows = byTimeAsc(report.debts.generated).map((debt) => `
         <tr>
             <td>#${debt.id}</td>
             <td>${formatDate(debt.created_at)}</td>
@@ -217,7 +310,7 @@ function renderGeneratedDebtsSubtotal(report: CloseReportData): string {
 }
 
 function renderPaidDebts(report: CloseReportData): string {
-    const rows = report.debts.paid.map((payment) => `
+    const rows = byTimeAsc(report.debts.paid).map((payment) => `
         <tr>
             <td>#${payment.id}</td>
             <td>${formatDate(payment.created_at)}</td>
@@ -244,6 +337,8 @@ function renderPaidDebtsSubtotal(report: CloseReportData): string {
 
 function renderCloseReportHtml(report: CloseReportData): string {
     const { close, summary } = report
+    const salesCount = report.sales.all.length
+    const averageTicket = salesCount ? summary.totalSales / salesCount : 0
 
     return `
 <!doctype html>
@@ -303,9 +398,22 @@ function renderCloseReportHtml(report: CloseReportData): string {
             display: block;
             font-size: 14px;
         }
+        .pos { color: #15803d; }
+        .neg { color: #b91c1c; }
+        .balance-cell {
+            font-size: 14px;
+            font-weight: 700;
+        }
         .highlight {
             background: #f0f4f8;
             border: 1px solid #bcccdc;
+            margin-bottom: 12px;
+            padding: 10px;
+        }
+        .cash-check {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 4px;
             margin-bottom: 18px;
             padding: 10px;
         }
@@ -314,14 +422,23 @@ function renderCloseReportHtml(report: CloseReportData): string {
             page-break-inside: avoid;
         }
         .section h2 {
-            border-bottom: 1px solid #d9e2ec;
+            background: var(--accent-bg, #f0f4f8);
+            border-left: 4px solid var(--accent, #1f2933);
+            border-radius: 4px;
+            color: var(--accent, #1f2933);
             font-size: 15px;
-            margin-bottom: 8px;
-            padding-bottom: 5px;
+            margin-bottom: 10px;
+            padding: 7px 10px;
         }
         table {
             border-collapse: collapse;
             width: 100%;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tfoot {
+            display: table-row-group;
         }
         th {
             background: #f0f4f8;
@@ -373,11 +490,44 @@ function renderCloseReportHtml(report: CloseReportData): string {
 
     <section class="highlight">
         <strong>Resumen operativo:</strong>
+        ${salesCount} ventas, ticket promedio ${formatMoney(averageTicket)},
         carnes ${formatMoney(summary.totalMeat)}, mercaderia ${formatMoney(summary.totalMerchandise)},
         ingreso real ${formatMoney(summary.realIncome)}.
     </section>
 
-    <section class="section">
+    <section class="cash-check">
+        ${renderCashCheck(report)}
+    </section>
+
+    <section class="section" style="--accent:#0f766e; --accent-bg:#f0fdfa;">
+        <h2>Totales por metodo de pago</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metodo</th>
+                    <th class="number">Cantidad</th>
+                    <th class="number">Importe</th>
+                </tr>
+            </thead>
+            <tbody>${renderPayMethodBreakdown(report)}</tbody>
+        </table>
+    </section>
+
+    <section class="section" style="--accent:#334155; --accent-bg:#f1f5f9;">
+        <h2>Balance de ingresos / egresos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th class="number">Ingresos</th>
+                    <th class="number">Egresos</th>
+                </tr>
+            </thead>
+            <tbody>${renderBalance(report)}</tbody>
+        </table>
+    </section>
+
+    <section class="section" style="--accent:#1d4ed8; --accent-bg:#eff6ff;">
         <h2>Ventas</h2>
         <table>
             <thead>
@@ -395,7 +545,7 @@ function renderCloseReportHtml(report: CloseReportData): string {
         </table>
     </section>
 
-    <section class="section">
+    <section class="section" style="--accent:#b91c1c; --accent-bg:#fef2f2;">
         <h2>Carne</h2>
         <table>
             <thead>
@@ -411,7 +561,7 @@ function renderCloseReportHtml(report: CloseReportData): string {
         </table>
     </section>
 
-    <section class="section">
+    <section class="section" style="--accent:#b45309; --accent-bg:#fffbeb;">
         <h2>Mercaderia</h2>
         <table>
             <thead>
@@ -427,7 +577,7 @@ function renderCloseReportHtml(report: CloseReportData): string {
         </table>
     </section>
 
-    <section class="section">
+    <section class="section" style="--accent:#475569; --accent-bg:#f1f5f9;">
         <h2>Gastos</h2>
         <table>
             <thead>
@@ -444,7 +594,7 @@ function renderCloseReportHtml(report: CloseReportData): string {
         </table>
     </section>
 
-    <section class="section">
+    <section class="section" style="--accent:#6d28d9; --accent-bg:#f5f3ff;">
         <h2>Deudas generadas</h2>
         <table>
             <thead>
@@ -462,7 +612,7 @@ function renderCloseReportHtml(report: CloseReportData): string {
         </table>
     </section>
 
-    <section class="section">
+    <section class="section" style="--accent:#15803d; --accent-bg:#f0fdf4;">
         <h2>Pagos de deuda</h2>
         <table>
             <thead>

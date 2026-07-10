@@ -1,15 +1,23 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { downloadClosePdf, finishClose, getActiveClose, getCloseReport, getCloses, startClose } from './api'
+import { CloseFilters, downloadClosePdf, finishClose, getActiveClose, getCloseReport, getCloses, startClose } from './api'
 import { getErrorMessage } from '@/lib/errors'
 import { queryKeys } from '@/lib/query-keys'
+
+export const CLOSES_PAGE_SIZE = 10
 
 export function useActiveClose() {
   return useQuery({ queryKey: queryKeys.activeClose, queryFn: getActiveClose })
 }
 
-export function useCloses() {
-  return useQuery({ queryKey: queryKeys.closes(), queryFn: getCloses })
+export function useCloses(filters?: CloseFilters) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.closes(filters),
+    queryFn: ({ pageParam }) => getCloses({ ...filters, limit: CLOSES_PAGE_SIZE, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === CLOSES_PAGE_SIZE ? allPages.length * CLOSES_PAGE_SIZE : undefined,
+  })
 }
 
 export function useCloseReport(id: number) {

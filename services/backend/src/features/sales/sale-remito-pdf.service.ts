@@ -65,6 +65,17 @@ function renderRows(data: SaleRemitoData): string {
         </tr>
     `)
 
+    if (data.details.length === 0 && data.sale.amount_meat > 0) {
+        detailRows.push(`
+            <tr>
+                <td>1</td>
+                <td>Carne</td>
+                <td class="number">${formatMoney(data.sale.amount_meat)}</td>
+                <td class="number">${formatMoney(data.sale.amount_meat)}</td>
+            </tr>
+        `)
+    }
+
     if (data.sale.amount_merchandise > 0) {
         detailRows.push(`
             <tr>

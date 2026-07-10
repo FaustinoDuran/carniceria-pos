@@ -3,4 +3,6 @@ export interface SaleFilters {
   close_id?: number | null
   pay_method?: string
   id?: number
+  limit?: number
+  offset?: number
 }

@@ -8,6 +8,9 @@ import { PoolClient } from 'pg'
 interface CloseFilters {
     start_at?: Date,
     end_at?: Date | null
+    month?: string
+    limit?: number
+    offset?: number
 }
 
 export class CloseRepository {
@@ -30,6 +33,10 @@ export class CloseRepository {
             values.push(filters.start_at)
             conditions.push(`DATE(start_at) = DATE($${values.length})`)
         }
+        if (filters?.month) {
+            values.push(filters.month)
+            conditions.push(`TO_CHAR(start_at, 'YYYY-MM') = $${values.length}`)
+        }
         if (filters?.end_at === null) {
             conditions.push('end_at IS NULL')
         } else if (filters?.end_at !== undefined) {
@@ -39,9 +46,19 @@ export class CloseRepository {
 
         const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
+        let pagination = ''
+        if (filters?.limit !== undefined) {
+            values.push(filters.limit)
+            pagination += ` LIMIT $${values.length}`
+        }
+        if (filters?.offset !== undefined) {
+            values.push(filters.offset)
+            pagination += ` OFFSET $${values.length}`
+        }
+
         const executor = client ?? pool
         const { rows } = await executor.query(
-            `SELECT * FROM closes ${where} ORDER BY DATE(start_at) DESC`, values
+            `SELECT * FROM closes ${where} ORDER BY DATE(start_at) DESC, id DESC${pagination}`, values
         )
         return rows.map( row => mapToModel( Close, row))
     }

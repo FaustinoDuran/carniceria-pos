@@ -18,11 +18,13 @@ interface UpdateSaleRequestBody extends UpdateSalesData {
 
 export const saleController = {
     async search(req: Request, res: Response): Promise<void> {
-        const query = res.locals.query as { date?: Date | 'today'; close_id?: number | 'null'; pay_method?: SaleFilters['pay_method'] }
+        const query = res.locals.query as { date?: Date | 'today'; close_id?: number | 'null'; pay_method?: SaleFilters['pay_method']; limit?: number; offset?: number }
         const filters: SaleFilters = {
             pay_method: query.pay_method,
             date: query.date === 'today' ? new Date() : query.date,
             close_id: query.close_id === 'null' ? null : query.close_id,
+            limit: query.limit,
+            offset: query.offset,
         }
         const sales = await saleService.search(filters)
         res.json(serializeResource(sales))

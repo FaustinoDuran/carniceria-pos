@@ -5,7 +5,9 @@ import { Close } from './models/close.model'
 export interface CloseFilters {
   start_at?: Date
   end_at?: Date | null
-  
+  month?: string
+  limit?: number
+  offset?: number
 }
 
 export interface FinishCloseInput {

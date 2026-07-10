@@ -277,10 +277,11 @@ describe('CloseService', () => {
 			expect(closeRepository.getAll).toHaveBeenCalledWith({ end_at: mockCloseFinished.end_at })
 		})
 
-		it('should return notFoundError if not exist closes with the given filters', async () => {
+		it('should return an empty array when no closes match the given filters', async () => {
 			vi.spyOn(closeRepository, 'getAll').mockResolvedValue([])
 
-			await expect(closeService.search({ start_at: new Date('2023-01-01') })).rejects.toBeInstanceOf(NotFoundError)
+			const result = await closeService.search({ start_at: new Date('2023-01-01') })
+			expect(result).toEqual([])
 			expect(closeRepository.getAll).toHaveBeenCalledWith({ start_at: new Date('2023-01-01') })
 
 		})

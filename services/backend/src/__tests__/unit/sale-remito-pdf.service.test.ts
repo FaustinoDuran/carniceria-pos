@@ -61,6 +61,33 @@ describe('SaleRemitoPdfService', () => {
         expect(browser.close).toHaveBeenCalledTimes(1)
     })
 
+    it('renders a Carne row from amount_meat when the sale has no cut details', async () => {
+        await saleRemitoPdfService.generateSaleRemitoPdf({
+            sale: createMockSale({ id: 5, amount_meat: 3500, amount_merchandise: 800 }),
+            details: [],
+            customer: null,
+        })
+
+        const html = page.setContent.mock.calls[0][0] as string
+        expect(html).toContain('<td>Carne</td>')
+        expect(html).toContain('3.500,00')
+        expect(html).toContain('Mercadería')
+        expect(html).toContain('800,00')
+    })
+
+    it('renders only a Mercadería row when the sale has no meat and no cut details', async () => {
+        await saleRemitoPdfService.generateSaleRemitoPdf({
+            sale: createMockSale({ id: 6, amount_meat: 0, amount_merchandise: 1200 }),
+            details: [],
+            customer: null,
+        })
+
+        const html = page.setContent.mock.calls[0][0] as string
+        expect(html).not.toContain('<td>Carne</td>')
+        expect(html).toContain('Mercadería')
+        expect(html).toContain('1.200,00')
+    })
+
     it('renders an empty customer field when no customer is associated', async () => {
         await saleRemitoPdfService.generateSaleRemitoPdf({
             sale: createMockSale({ id: 3, amount_meat: 2000, amount_merchandise: 0 }),

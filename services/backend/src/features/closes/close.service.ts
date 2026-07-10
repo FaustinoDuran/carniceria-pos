@@ -66,11 +66,7 @@ export class CloseService implements ICloseService {
   }
 
   async search(filters?: CloseFilters): Promise<Close[]> {
-    const closes = await closeRepository.getAll(filters)
-    if (filters && closes.length === 0) {
-      throw new NotFoundError('Closes not found')
-    }
-    return closes
+    return closeRepository.getAll(filters)
   }
 
   async getById(id: number): Promise<Close> {

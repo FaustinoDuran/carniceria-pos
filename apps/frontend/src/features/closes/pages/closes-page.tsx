@@ -1,8 +1,9 @@
-import { Download, Eye, LockKeyhole, Play } from 'lucide-react'
+import { Download, Eye, LockKeyhole, Play, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { PageHeader } from '@/components/common/page-header'
 import { LoadingState } from '@/components/common/loading-state'
+import { EmptyState } from '@/components/common/empty-state'
 import { Money } from '@/components/common/money'
 import { DecimalInput } from '@/components/common/decimal-input'
 import { Button } from '@/components/ui/button'
@@ -45,10 +46,18 @@ function FinishCloseDialog({ closeId, open, onOpenChange }: { closeId: number | 
 
 export function ClosesPage() {
   const activeClose = useActiveClose()
-  const closes = useCloses()
   const startClose = useStartClose()
   const downloadPdf = useDownloadClosePdf()
   const [finishOpen, setFinishOpen] = useState(false)
+  const [exactDate, setExactDate] = useState('')
+  const [month, setMonth] = useState('')
+
+  const hasFilter = Boolean(exactDate || month)
+  const closes = useCloses({
+    start_at: exactDate || undefined,
+    month: month || undefined,
+  })
+  const closeRows = closes.data?.pages.flat() ?? []
 
   return (
     <>
@@ -79,12 +88,42 @@ export function ClosesPage() {
 
         <Card>
           <CardHeader><CardTitle>Historial de cierres</CardTitle></CardHeader>
-          <CardContent>
-            {closes.isLoading ? <LoadingState /> : (
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">Fecha exacta</Label>
+                <Input
+                  type="date"
+                  className="w-44"
+                  value={exactDate}
+                  onChange={(e) => { setExactDate(e.target.value); setMonth('') }}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">Mes / Año</Label>
+                <Input
+                  type="month"
+                  className="w-44"
+                  value={month}
+                  onChange={(e) => { setMonth(e.target.value); setExactDate('') }}
+                />
+              </div>
+              {hasFilter ? (
+                <Button variant="outline" size="sm" onClick={() => { setExactDate(''); setMonth('') }}>
+                  <X className="h-4 w-4" /> Limpiar
+                </Button>
+              ) : null}
+            </div>
+            {closes.isLoading ? <LoadingState /> : closeRows.length === 0 ? (
+              <EmptyState
+                title="Sin cierres"
+                description={hasFilter ? 'No hay cierres para el filtro seleccionado.' : 'Todavía no hay cierres registrados.'}
+              />
+            ) : (
               <Table>
                 <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Apertura</TableHead><TableHead>Cierre</TableHead><TableHead>Ingresos</TableHead><TableHead>Gastos</TableHead><TableHead>Balance</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {(closes.data || []).map((close) => (
+                  {closeRows.map((close) => (
                     <TableRow key={close.id}>
                       <TableCell>{formatDate(close.start_at)}</TableCell>
                       <TableCell>{formatTime(close.start_at)}</TableCell>
@@ -101,6 +140,13 @@ export function ClosesPage() {
                 </TableBody>
               </Table>
             )}
+            {closes.hasNextPage ? (
+              <div className="flex justify-center pt-2">
+                <Button variant="outline" onClick={() => closes.fetchNextPage()} disabled={closes.isFetchingNextPage}>
+                  {closes.isFetchingNextPage ? 'Cargando...' : 'Ver más'}
+                </Button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </div>

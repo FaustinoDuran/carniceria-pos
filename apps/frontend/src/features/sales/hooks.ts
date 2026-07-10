@@ -1,11 +1,19 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createSale, deleteSale, getSaleDetails, getSales, SaleFilters, updateSale } from './api'
 import { getErrorMessage } from '@/lib/errors'
 import { queryKeys } from '@/lib/query-keys'
 
+export const SALES_PAGE_SIZE = 50
+
 export function useSales(filters?: SaleFilters) {
-  return useQuery({ queryKey: queryKeys.sales(filters), queryFn: () => getSales(filters) })
+  return useInfiniteQuery({
+    queryKey: queryKeys.sales(filters),
+    queryFn: ({ pageParam }) => getSales({ ...filters, limit: SALES_PAGE_SIZE, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === SALES_PAGE_SIZE ? allPages.length * SALES_PAGE_SIZE : undefined,
+  })
 }
 
 export function useSaleDetails(saleId: number, enabled = true) {

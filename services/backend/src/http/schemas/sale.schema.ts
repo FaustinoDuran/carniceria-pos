@@ -8,6 +8,8 @@ export const SaleQuerySchema = z.object({
     date: z.union([z.literal('today'), DateQueryValueSchema]).optional(),
     close_id: z.union([z.literal('null'), z.coerce.number().int().positive()]).optional(),
     pay_method: PayMethodSchema.optional(),
+    limit: z.coerce.number().int().positive().max(200).optional(),
+    offset: z.coerce.number().int().min(0).optional(),
 }).strict()
 
 export const CreateSaleRequestSchema = CreateSalesSchema.extend({

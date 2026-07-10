@@ -11,7 +11,7 @@ export const closeController = {
     },
 
     async search(req: Request, res: Response): Promise<void> {
-        const query = res.locals.query as { start_at?: Date; end_at?: Date | 'open' }
+        const query = res.locals.query as { start_at?: Date; end_at?: Date | 'open'; month?: string; limit?: number; offset?: number }
         const filters: CloseFilters = {}
 
         if (query.start_at !== undefined) {
@@ -20,6 +20,18 @@ export const closeController = {
 
         if (query.end_at !== undefined) {
             filters.end_at = query.end_at === 'open' ? null : query.end_at
+        }
+
+        if (query.month !== undefined) {
+            filters.month = query.month
+        }
+
+        if (query.limit !== undefined) {
+            filters.limit = query.limit
+        }
+
+        if (query.offset !== undefined) {
+            filters.offset = query.offset
         }
 
         const closes = await closeService.search(Object.keys(filters).length ? filters : undefined)

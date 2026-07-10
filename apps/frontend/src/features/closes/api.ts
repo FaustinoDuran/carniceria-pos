@@ -49,8 +49,15 @@ export async function getActiveClose(): Promise<Close | null> {
   return data
 }
 
-export async function getCloses(): Promise<Close[]> {
-  const { data } = await apiClient.get<Close[]>('/closes')
+export interface CloseFilters {
+  start_at?: string
+  month?: string
+  limit?: number
+  offset?: number
+}
+
+export async function getCloses(filters?: CloseFilters): Promise<Close[]> {
+  const { data } = await apiClient.get<Close[]>('/closes', { params: filters })
   return data
 }
 

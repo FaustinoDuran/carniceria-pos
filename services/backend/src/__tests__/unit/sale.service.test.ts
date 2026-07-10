@@ -245,13 +245,18 @@ describe('SaleService', () => {
             expect(saleDetailRepository.getBySaleId).not.toHaveBeenCalled()
         })
 
-        it('should throw BusinessError when sale has no details', async () => {
+        it('should return empty details when sale has no cut details', async () => {
             const sale = createMockSale({ id: 1 })
+            const customer = { id: 9, name: 'Ana', last_name: 'Lopez' }
+
             vi.mocked(saleRepository.getById).mockResolvedValue(sale)
             vi.mocked(saleDetailRepository.getBySaleId).mockResolvedValue([])
+            vi.mocked(debtRepository.getCustomerBySaleId).mockResolvedValue(customer)
 
-            await expect(saleService.getRemitoData(1)).rejects.toThrow(BusinessError)
-            expect(debtRepository.getCustomerBySaleId).not.toHaveBeenCalled()
+            const result = await saleService.getRemitoData(1)
+
+            expect(result).toEqual({ sale, details: [], customer })
+            expect(debtRepository.getCustomerBySaleId).toHaveBeenCalledWith(1)
         })
     })
 

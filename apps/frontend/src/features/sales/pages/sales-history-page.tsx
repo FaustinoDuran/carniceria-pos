@@ -1,5 +1,4 @@
 import { ChevronDown, Pencil, Plus, Printer, Trash2 } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/common/page-header'
@@ -18,9 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label'
 import { formatDate, formatTime, payMethodLabel, saleTotal } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/errors'
-import { queryKeys } from '@/lib/query-keys'
 import { useCustomers } from '@/features/customers/hooks'
-import { getSaleDetails, getSaleRemitoPdf, Sale, SaleDetail } from '../api'
+import { getSaleRemitoPdf, Sale, SaleDetail } from '../api'
 import { useDeleteSale, useSaleDetails, useSales, useUpdateSale } from '../hooks'
 
 function SaleDetailsRow({ saleId }: { saleId: number }) {
@@ -237,7 +235,6 @@ function EditSaleDialog({ sale, open, onOpenChange }: { sale: Sale | null; open:
 }
 
 export function SalesHistoryPage() {
-  const queryClient = useQueryClient()
   const [fullHistory, setFullHistory] = useState(false)
   const [payMethod, setPayMethod] = useState<string>('all')
   const [expanded, setExpanded] = useState<number | null>(null)
@@ -250,6 +247,7 @@ export function SalesHistoryPage() {
     pay_method: payMethod === 'all' ? undefined : payMethod,
   }
   const sales = useSales(filters)
+  const saleRows = sales.data?.pages.flat() ?? []
   const deleteSale = useDeleteSale()
 
   async function handlePrintRemito(sale: Sale) {
@@ -261,19 +259,6 @@ export function SalesHistoryPage() {
     }
 
     try {
-      const details = await queryClient.fetchQuery({
-        queryKey: queryKeys.saleDetails(sale.id),
-        queryFn: () => getSaleDetails(sale.id),
-      })
-
-      if (!details.length) {
-        if (printWindow && !printWindow.closed) {
-          printWindow.close()
-        }
-        toast.error('El remito solo se puede imprimir para ventas con detalle de cortes')
-        return
-      }
-
       const pdf = await getSaleRemitoPdf(sale.id)
       const url = URL.createObjectURL(pdf)
 
@@ -331,7 +316,7 @@ export function SalesHistoryPage() {
               </SelectContent>
             </Select>
           </div>
-          {sales.isLoading ? <LoadingState /> : !sales.data?.length ? <EmptyState title="Sin ventas" description="No hay ventas para los filtros actuales." /> : (
+          {sales.isLoading ? <LoadingState /> : !saleRows.length ? <EmptyState title="Sin ventas" description="No hay ventas para los filtros actuales." /> : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -339,7 +324,7 @@ export function SalesHistoryPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sales.data.map((sale) => (
+                {saleRows.map((sale) => (
                   <Fragment key={sale.id}>
                     <TableRow key={sale.id}>
                       <TableCell>{formatDate(sale.created_at)} {formatTime(sale.created_at)}</TableCell>
@@ -379,6 +364,13 @@ export function SalesHistoryPage() {
               </TableBody>
             </Table>
           )}
+          {sales.hasNextPage ? (
+            <div className="flex justify-center pt-2">
+              <Button variant="outline" onClick={() => sales.fetchNextPage()} disabled={sales.isFetchingNextPage}>
+                {sales.isFetchingNextPage ? 'Cargando...' : 'Ver más'}
+              </Button>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
       <ConfirmDialog

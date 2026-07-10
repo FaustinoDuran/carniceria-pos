@@ -19,6 +19,8 @@ export interface SaleFilters {
   date?: string
   close_id?: number | 'null'
   pay_method?: string
+  limit?: number
+  offset?: number
 }
 
 export interface CreateSaleInput {

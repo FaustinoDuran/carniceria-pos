@@ -211,10 +211,6 @@ export class SaleService implements ISaleService {
         }
 
         const details = await saleDetailRepository.getBySaleId(id)
-        if (!details.length) {
-            throw new BusinessError('El remito solo se puede imprimir para ventas con detalle de cortes')
-        }
-
         const customer = await debtRepository.getCustomerBySaleId(id)
 
         return {

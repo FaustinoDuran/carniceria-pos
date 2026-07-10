@@ -53,6 +53,9 @@ describe('CloseReportPdfService', () => {
         expect(html).toContain('Subtotal deudas cobradas')
         expect(html).toContain('Nro. deuda')
         expect(html).toContain('Juan Perez')
+        expect(html).toContain('Balance de ingresos / egresos')
+        expect(html).toContain('Cuenta corriente generada')
+        expect(html).toContain('Ingreso real (resultado)')
         expect(setContentOptions).toEqual({ waitUntil: 'load' })
         expect(page.pdf).toHaveBeenCalledWith({
             format: 'A4',
