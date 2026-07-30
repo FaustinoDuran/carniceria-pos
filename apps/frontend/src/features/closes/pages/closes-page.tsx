@@ -17,11 +17,15 @@ import { useActiveClose, useCloses, useDownloadClosePdf, useFinishClose, useStar
 
 function FinishCloseDialog({ closeId, open, onOpenChange }: { closeId: number | null; open: boolean; onOpenChange: (open: boolean) => void }) {
   const [expectedCash, setExpectedCash] = useState<number | null>(null)
+  const [expectedCard, setExpectedCard] = useState<number | null>(null)
   const finishClose = useFinishClose()
 
   function submit() {
     if (!closeId) return
-    finishClose.mutate({ id: closeId, expected_cash: expectedCash }, { onSuccess: () => onOpenChange(false) })
+    finishClose.mutate(
+      { id: closeId, expected_cash: expectedCash, expected_card: expectedCard },
+      { onSuccess: () => onOpenChange(false) },
+    )
   }
 
   return (
@@ -33,6 +37,11 @@ function FinishCloseDialog({ closeId, open, onOpenChange }: { closeId: number | 
           <div className="space-y-2">
             <Label>Efectivo físico en caja</Label>
             <DecimalInput onChange={(e) => setExpectedCash(e.target.value ? Number(e.target.value) : null)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Cierre de posnet</Label>
+            <DecimalInput onChange={(e) => setExpectedCard(e.target.value ? Number(e.target.value) : null)} />
+            <p className="text-xs text-slate-500">Total que devuelve la terminal: créditos + débitos juntos.</p>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

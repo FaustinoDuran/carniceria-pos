@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS closes (
   total_income NUMERIC(10,2) DEFAULT 0,
   total_expense NUMERIC(10,2) DEFAULT 0,
   expected_cash NUMERIC(10,2) DEFAULT NULL,
+  expected_card NUMERIC(10,2) DEFAULT NULL,
   CONSTRAINT closes_end_after_start CHECK (end_at IS NULL OR end_at >= start_at)
 );
 

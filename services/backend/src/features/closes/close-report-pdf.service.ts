@@ -23,8 +23,9 @@ const pdfOptions: PDFOptions = {
     },
 }
 
+// Los montos declarados por el cajero pueden faltar; en ese caso no inventamos un 0.
 function formatMoney(value: number | null | undefined): string {
-    return currencyFormatter.format(value ?? 0)
+    return value === null || value === undefined ? '&mdash;' : currencyFormatter.format(value)
 }
 
 function formatDate(value: Date | null | undefined): string {
@@ -77,7 +78,8 @@ function renderSummary(report: CloseReportData): string {
         ['Deudas cobradas', summary.totalDebtPaid, ''],
         ['Gastos', summary.totalExpenses, 'neg'],
         ['Ingreso real', summary.realIncome, 'pos'],
-        ['Efectivo esperado', summary.expectedCash, ''],
+        ['Efectivo contado', summary.expectedCash, ''],
+        ['Cierre de posnet', summary.expectedCard, ''],
     ]
 
     return rows.map(([label, value, tone]) => `
@@ -116,21 +118,124 @@ function renderPayMethodBreakdown(report: CloseReportData): string {
     `
 }
 
-function renderCashCheck(report: CloseReportData): string {
-    const { summary } = report
+function differenceLabel(difference: number): string {
+    return difference < 0 ? 'Faltante' : difference > 0 ? 'Sobrante' : 'Sin diferencia'
+}
 
-    if (summary.expectedCash === null || summary.expectedCash === undefined) {
-        return '<strong>Arqueo de caja:</strong> efectivo fisico sin registrar en este cierre.'
+function differenceTone(difference: number): string {
+    return difference === 0 ? 'pos' : 'neg'
+}
+
+// Arqueo por rubro: lo declarado contra lo que deberia haber segun el sistema.
+// Permite ver de que lado esta el error en vez de "revisar todo".
+function renderCashCheck(report: CloseReportData): string {
+    const { reconciliation } = report.summary
+
+    const lines: string[] = [
+        `<div class="check-line">
+            <span>Arqueo de caja</span>
+            <span>
+                contado ${formatMoney(reconciliation.sideTwo.cash)}
+                &minus; teorico ${formatMoney(reconciliation.theoreticalCash)}
+                = ${reconciliation.cashDifference === null
+                    ? '<strong>sin declarar</strong>'
+                    : `<strong class="${differenceTone(reconciliation.cashDifference)}">${formatMoney(reconciliation.cashDifference)}</strong> (${differenceLabel(reconciliation.cashDifference)})`}
+            </span>
+        </div>`,
+        `<div class="check-line">
+            <span>Arqueo de posnet</span>
+            <span>
+                declarado ${formatMoney(reconciliation.sideTwo.card)}
+                &minus; teorico ${formatMoney(reconciliation.theoreticalCard)}
+                = ${reconciliation.cardDifference === null
+                    ? '<strong>sin declarar</strong>'
+                    : `<strong class="${differenceTone(reconciliation.cardDifference)}">${formatMoney(reconciliation.cardDifference)}</strong> (${differenceLabel(reconciliation.cardDifference)})`}
+            </span>
+        </div>`,
+    ]
+
+    if (reconciliation.unexplainedDifference !== null && reconciliation.unexplainedDifference !== 0) {
+        lines.push(`<div class="check-line">
+            <span>Diferencia no explicada</span>
+            <span>
+                <strong class="neg">${formatMoney(reconciliation.unexplainedDifference)}</strong>
+                &mdash; revisar ventas en cuenta corriente sin deuda asociada
+            </span>
+        </div>`)
     }
 
-    const difference = Number((summary.expectedCash - summary.totalCash).toFixed(2))
-    const tone = difference < 0 ? 'neg' : 'pos'
-    const label = difference < 0 ? 'Faltante' : difference > 0 ? 'Sobrante' : 'Sin diferencia'
+    const teoricoCash = 'ventas en efectivo + cobros de cta cte en efectivo &minus; gastos pagados'
+    const teoricoCard = 'ventas con tarjeta + cobros de cta cte con tarjeta'
 
     return `
-        <strong>Arqueo de caja:</strong>
-        efectivo fisico ${formatMoney(summary.expectedCash)} &minus; ventas en efectivo ${formatMoney(summary.totalCash)}
-        = <strong class="${tone}">${formatMoney(difference)}</strong> (${label})
+        ${lines.join('')}
+        <p class="check-note">
+            Teorico de caja = ${teoricoCash}. Teorico de posnet = ${teoricoCard}.
+        </p>
+    `
+}
+
+// Cuadre de cierre final, con la misma estructura que se hace a mano:
+// dos totales que tienen que coincidir.
+function renderFinalCheck(report: CloseReportData): string {
+    const { reconciliation } = report.summary
+    const { sideOne, sideTwo } = reconciliation
+
+    const row = (label: string, value: number | null, note = '') => `
+        <tr>
+            <td>${escapeHtml(label)}${note ? ` <span class="muted">${escapeHtml(note)}</span>` : ''}</td>
+            <td class="number">${formatMoney(value)}</td>
+        </tr>
+    `
+
+    const differenceRow = reconciliation.difference === null
+        ? `<tr class="subtotal">
+                <td>Diferencia &#9313; &minus; &#9312;</td>
+                <td class="number balance-cell">&mdash;</td>
+           </tr>
+           <tr>
+                <td colspan="2" class="empty">
+                    Faltan montos declarados en este cierre, no se puede calcular el cuadre.
+                </td>
+           </tr>`
+        : `<tr class="subtotal">
+                <td>Diferencia &#9313; &minus; &#9312; <span class="muted">debe dar cero</span></td>
+                <td class="number balance-cell ${differenceTone(reconciliation.difference)}">
+                    ${formatMoney(reconciliation.difference)}
+                </td>
+           </tr>`
+
+    return `
+        <table>
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th class="number">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="group"><td colspan="2">&#9312; Lo que se vendio y se cobro</td></tr>
+                ${row('Tickets de carne', sideOne.meat)}
+                ${row('Vineria / mercaderia', sideOne.merchandise)}
+                ${row('Recibido cta cte', sideOne.debtPaid)}
+                <tr class="subtotal">
+                    <td>Total &#9312;</td>
+                    <td class="number">${formatMoney(sideOne.total)}</td>
+                </tr>
+
+                <tr class="group"><td colspan="2">&#9313; Donde esta ese dinero</td></tr>
+                ${row('Efectivo contado', sideTwo.cash, 'declarado')}
+                ${row('Cierre de posnet', sideTwo.card, 'declarado')}
+                ${row('M.P', sideTwo.transfer, 'transferencias')}
+                ${row('Boletas cta cte', sideTwo.debtGenerated, 'vendido, no cobrado')}
+                ${row('Gastos pagados', sideTwo.expenses, 'salieron de la caja')}
+                <tr class="subtotal">
+                    <td>Total &#9313;</td>
+                    <td class="number">${formatMoney(sideTwo.total)}</td>
+                </tr>
+            </tbody>
+            <tfoot>${differenceRow}</tfoot>
+        </table>
     `
 }
 
@@ -417,6 +522,37 @@ function renderCloseReportHtml(report: CloseReportData): string {
             margin-bottom: 18px;
             padding: 10px;
         }
+        .check-line {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+        .check-line + .check-line {
+            border-top: 1px solid #fde68a;
+            margin-top: 5px;
+            padding-top: 5px;
+        }
+        .check-line > span:first-child {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .check-line > span:last-child {
+            text-align: right;
+        }
+        .check-note {
+            border-top: 1px solid #fde68a;
+            color: #78716c;
+            font-size: 10px;
+            margin-top: 7px;
+            padding-top: 5px;
+        }
+        tr.group td {
+            background: #f0f4f8;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
         .section {
             margin-top: 18px;
             page-break-inside: avoid;
@@ -493,6 +629,11 @@ function renderCloseReportHtml(report: CloseReportData): string {
         ${salesCount} ventas, ticket promedio ${formatMoney(averageTicket)},
         carnes ${formatMoney(summary.totalMeat)}, mercaderia ${formatMoney(summary.totalMerchandise)},
         ingreso real ${formatMoney(summary.realIncome)}.
+    </section>
+
+    <section class="section" style="--accent:#7c2d12; --accent-bg:#fff7ed;">
+        <h2>Cierre final</h2>
+        ${renderFinalCheck(report)}
     </section>
 
     <section class="cash-check">

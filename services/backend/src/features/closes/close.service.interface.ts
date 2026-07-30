@@ -12,6 +12,7 @@ export interface CloseFilters {
 
 export interface FinishCloseInput {
   expected_cash?: number | null
+  expected_card?: number | null
 }
 
 export interface ICloseService {

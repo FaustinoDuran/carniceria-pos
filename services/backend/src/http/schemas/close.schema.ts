@@ -11,4 +11,5 @@ export const CloseQuerySchema = z.object({
 
 export const FinishCloseRequestSchema = z.object({
     expected_cash: z.number().min(0).nullable().optional(),
+    expected_card: z.number().min(0).nullable().optional(),
 }).strict()

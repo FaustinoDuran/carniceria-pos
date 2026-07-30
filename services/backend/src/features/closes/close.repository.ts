@@ -85,8 +85,8 @@ export class CloseRepository {
     async finish(id: number, dto: FinishClose, client?: PoolClient): Promise<Close | null> {
         const executor = client ?? pool
         const { rows } = await executor.query(
-            `UPDATE closes SET end_at = $1, total_income = $2, total_expense = $3, expected_cash = $4 WHERE id = $5 AND end_at IS NULL
-            RETURNING *`,  [dto.end_at, dto.total_income, dto.total_expense, dto.expected_cash, id]    )
+            `UPDATE closes SET end_at = $1, total_income = $2, total_expense = $3, expected_cash = $4, expected_card = $5 WHERE id = $6 AND end_at IS NULL
+            RETURNING *`,  [dto.end_at, dto.total_income, dto.total_expense, dto.expected_cash, dto.expected_card, id]    )
     
         return rows.length ? mapToModel(Close, rows[0]) : null
     }

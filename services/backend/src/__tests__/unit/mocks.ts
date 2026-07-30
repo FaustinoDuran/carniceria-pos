@@ -10,6 +10,7 @@ import { SaleDetail } from '../../features/sale-details/models/sale-detail.model
 import { SaleDTO, UpdateSaleDTO } from '../../features/sales/models/sale.dto'
 import { Expense } from '../../features/expenses/models/expense.model'
 import { ExpenseDTO, UpdateExpenseDTO } from '../../features/expenses/models/expense.dto'
+import { buildReconciliation, splitDebtPaidByMethod } from '../../features/closes/close.utils'
 
 
 // 1. CLOSES MOCKS (Cajas)
@@ -181,7 +182,9 @@ const mockReportCashSale = createMockSale({ pay_method: 'cash', amount_meat: 600
 const mockReportTransferSale = createMockSale({ pay_method: 'transfer', amount_meat: 300, amount_merchandise: 0 })
 const mockReportCardSale = createMockSale({ pay_method: 'credit', amount_meat: 200, amount_merchandise: 0 })
 const mockReportCcSale = createMockSale({ pay_method: 'cc', amount_meat: 0, amount_merchandise: 100 })
-const mockReportGeneratedDebt = Object.assign(createMockDebt({ amount: 1500 }), {
+// La deuda generada tiene que igualar la venta en cuenta corriente, si no el cuadre
+// del cierre arroja una "diferencia no explicada" y el fixture deja de ser realista.
+const mockReportGeneratedDebt = Object.assign(createMockDebt({ amount: 100 }), {
     customer_name: 'Juan Perez',
 })
 const mockReportPaidDebt = Object.assign(createMockDebtPaymentEvent({ paid_amount: 100 }), {
@@ -190,8 +193,24 @@ const mockReportPaidDebt = Object.assign(createMockDebtPaymentEvent({ paid_amoun
 })
 const mockReportExpense = createMockExpense({ amount: 300 })
 
+const mockReportDebtPaidByMethod = splitDebtPaidByMethod([mockReportPaidDebt])
+
+const mockReportReconciliation = buildReconciliation({
+    totalMeat: 1100,
+    totalMerchandise: 500,
+    totalCash: 1000,
+    totalTransfer: 300,
+    totalCard: 200,
+    totalDebtGenerated: 100,
+    totalDebtPaid: 100,
+    totalExpenses: 300,
+    debtPaidByMethod: mockReportDebtPaidByMethod,
+    declaredCash: 1200,
+    declaredCard: 200,
+})
+
 export const mockCloseReportData = {
-    close: createMockCloseFinished({ expected_cash: 1200 }),
+    close: createMockCloseFinished({ expected_cash: 1200, expected_card: 200 }),
     sales: {
         all: [
             mockReportCashSale,
@@ -218,11 +237,14 @@ export const mockCloseReportData = {
         totalCash: 1000,
         totalTransfer: 300,
         totalCard: 200,
-        totalDebtGenerated: 1500,
+        totalDebtGenerated: 100,
         totalDebtPaid: 100,
         totalExpenses: 300,
         realIncome: 1300,
         expectedCash: 1200,
+        expectedCard: 200,
+        debtPaidByMethod: mockReportDebtPaidByMethod,
+        reconciliation: mockReportReconciliation,
     },
 }
 

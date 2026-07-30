@@ -56,6 +56,14 @@ describe('CloseReportPdfService', () => {
         expect(html).toContain('Balance de ingresos / egresos')
         expect(html).toContain('Cuenta corriente generada')
         expect(html).toContain('Ingreso real (resultado)')
+        expect(html).toContain('Cierre final')
+        expect(html).toContain('Lo que se vendio y se cobro')
+        expect(html).toContain('Donde esta ese dinero')
+        expect(html).toContain('Tickets de carne')
+        expect(html).toContain('Recibido cta cte')
+        expect(html).toContain('Boletas cta cte')
+        expect(html).toContain('Arqueo de caja')
+        expect(html).toContain('Arqueo de posnet')
         expect(setContentOptions).toEqual({ waitUntil: 'load' })
         expect(page.pdf).toHaveBeenCalledWith({
             format: 'A4',
@@ -79,6 +87,29 @@ describe('CloseReportPdfService', () => {
         await expect(closeReportPdfService.generateCloseReportPdf(mockCloseReportData)).rejects.toThrow(error)
 
         expect(browser.close).toHaveBeenCalledTimes(1)
+    })
+
+    it('marca los montos declarados faltantes en vez de mostrarlos como cero', async () => {
+        const report = {
+            ...mockCloseReportData,
+            summary: {
+                ...mockCloseReportData.summary,
+                expectedCard: null,
+                reconciliation: {
+                    ...mockCloseReportData.summary.reconciliation,
+                    sideTwo: { ...mockCloseReportData.summary.reconciliation.sideTwo, card: null, total: null },
+                    difference: null,
+                    cardDifference: null,
+                    unexplainedDifference: null,
+                },
+            },
+        }
+
+        await closeReportPdfService.generateCloseReportPdf(report)
+
+        const html = page.setContent.mock.calls[0][0] as string
+        expect(html).toContain('sin declarar')
+        expect(html).toContain('no se puede calcular el cuadre')
     })
 
     it('escapes dynamic text before rendering the report HTML', async () => {

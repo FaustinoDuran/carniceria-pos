@@ -39,7 +39,8 @@ export function useStartClose() {
 export function useFinishClose() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, expected_cash }: { id: number; expected_cash?: number | null }) => finishClose(id, expected_cash),
+    mutationFn: ({ id, expected_cash, expected_card }: { id: number; expected_cash?: number | null; expected_card?: number | null }) =>
+      finishClose(id, expected_cash, expected_card),
     onSuccess: () => {
       toast.success('Caja cerrada')
       queryClient.invalidateQueries({ queryKey: ['closes'] })

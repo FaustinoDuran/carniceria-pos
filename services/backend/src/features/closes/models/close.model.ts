@@ -7,6 +7,7 @@ export class Close implements CloseData {
   private readonly _total_income: number
   private readonly _total_expense: number
   private readonly _expected_cash: number | null
+  private readonly _expected_card: number | null
 
   constructor(data: unknown) {
     const validated = CloseSchema.parse(data)
@@ -17,6 +18,7 @@ export class Close implements CloseData {
     this._total_income = validated.total_income
     this._total_expense = validated.total_expense
     this._expected_cash = validated.expected_cash
+    this._expected_card = validated.expected_card
   }
 
   get id(): number { return this._id }
@@ -26,4 +28,5 @@ export class Close implements CloseData {
   get total_expense(): number { return this._total_expense }
   get isOpen(): boolean { return this._end_at === null }
   get expected_cash(): number | null { return this._expected_cash }
+  get expected_card(): number | null { return this._expected_card }
 }

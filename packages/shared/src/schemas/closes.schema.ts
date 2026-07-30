@@ -9,6 +9,7 @@ export const FinishCloseSchema = z.object({
   total_income: z.number().min(0).default(0),
   total_expense: z.number().min(0).default(0),
   expected_cash: z.number().min(0).nullable(),
+  expected_card: z.number().min(0).nullable().default(null),
 })
 
 export const CloseSchema = z.object({
@@ -18,6 +19,7 @@ export const CloseSchema = z.object({
   total_income: z.number().min(0),
   total_expense: z.number().min(0),
   expected_cash: z.number().min(0).nullable(),
+  expected_card: z.number().min(0).nullable().default(null),
 })
 
 export type CreateCloseData = z.infer<typeof CreateCloseSchema>

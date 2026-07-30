@@ -10,7 +10,26 @@ export interface Close {
   total_income: number
   total_expense: number
   expected_cash: number | null
+  expected_card: number | null
   isOpen?: boolean
+}
+
+export interface CloseReconciliation {
+  sideOne: { meat: number; merchandise: number; debtPaid: number; total: number }
+  sideTwo: {
+    cash: number | null
+    card: number | null
+    transfer: number
+    debtGenerated: number
+    expenses: number
+    total: number | null
+  }
+  difference: number | null
+  theoreticalCash: number
+  theoreticalCard: number
+  cashDifference: number | null
+  cardDifference: number | null
+  unexplainedDifference: number | null
 }
 
 export interface CloseReport {
@@ -41,6 +60,9 @@ export interface CloseReport {
     totalExpenses: number
     realIncome: number
     expectedCash: number | null
+    expectedCard: number | null
+    debtPaidByMethod: { cash: number; card: number; transfer: number }
+    reconciliation: CloseReconciliation
   }
 }
 
@@ -66,8 +88,15 @@ export async function startClose(): Promise<Close> {
   return data
 }
 
-export async function finishClose(id: number, expected_cash?: number | null): Promise<Close> {
-  const { data } = await apiClient.post<Close>(`/closes/${id}/finish`, { expected_cash: expected_cash ?? null })
+export async function finishClose(
+  id: number,
+  expected_cash?: number | null,
+  expected_card?: number | null,
+): Promise<Close> {
+  const { data } = await apiClient.post<Close>(`/closes/${id}/finish`, {
+    expected_cash: expected_cash ?? null,
+    expected_card: expected_card ?? null,
+  })
   return data
 }
 

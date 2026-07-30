@@ -9,7 +9,7 @@ import { expenseRepository } from '../expenses/expense.repository'
 import { debtRepository } from '../debts/debt.repository'
 import { BusinessError, NotFoundError } from '../../shared/errors'
 import { withTransaction } from '../../shared/transaction.helper'
-import { roundMoney, saleTotal, expenseTotal, debtTotal, paymentEventTotal, validateFinishable, calculateTotals } from './close.utils'
+import { roundMoney, saleTotal, expenseTotal, debtTotal, paymentEventTotal, validateFinishable, calculateTotals, splitDebtPaidByMethod, buildReconciliation } from './close.utils'
 
 export class CloseService implements ICloseService {
   
@@ -53,6 +53,7 @@ export class CloseService implements ICloseService {
           total_income: totalIncome,
           total_expense: totalExpense,
           expected_cash: input?.expected_cash ?? null,
+          expected_card: input?.expected_card ?? null,
         }),
         client,
       )
@@ -112,6 +113,21 @@ export class CloseService implements ICloseService {
     const totalExpenses = roundMoney(expenses.reduce((total, expense) => total + expenseTotal(expense), 0))
     const realIncome = roundMoney(totalCash + totalTransfer + totalCard + totalDebtPaid - totalExpenses)
 
+    const debtPaidByMethod = splitDebtPaidByMethod(paidDebts)
+    const reconciliation = buildReconciliation({
+      totalMeat,
+      totalMerchandise,
+      totalCash,
+      totalTransfer,
+      totalCard,
+      totalDebtGenerated,
+      totalDebtPaid,
+      totalExpenses,
+      debtPaidByMethod,
+      declaredCash: close.expected_cash,
+      declaredCard: close.expected_card,
+    })
+
     return {
       close,
       sales: {
@@ -140,6 +156,9 @@ export class CloseService implements ICloseService {
         totalExpenses,
         realIncome,
         expectedCash: close.expected_cash,
+        expectedCard: close.expected_card,
+        debtPaidByMethod,
+        reconciliation,
       },
     }
   }

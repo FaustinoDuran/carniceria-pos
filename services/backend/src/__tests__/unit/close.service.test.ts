@@ -205,11 +205,28 @@ describe('CloseService', () => {
 			vi.spyOn(closeRepository, 'finish').mockResolvedValue(mockCloseFinished)
 			vi.spyOn(saleRepository, 'setClosed').mockResolvedValue(true)
 
-			await closeService.finish(mockCloseOpening.id, { expected_cash: 500 })
+			await closeService.finish(mockCloseOpening.id, { expected_cash: 500, expected_card: 250 })
 
 			expect(closeRepository.finish).toHaveBeenCalledWith(
 				mockCloseOpening.id,
-				expect.objectContaining({ expected_cash: 500 }),
+				expect.objectContaining({ expected_cash: 500, expected_card: 250 }),
+				mockClient,
+			)
+		})
+
+		it('should default expected_cash and expected_card to null when not provided', async () => {
+			vi.spyOn(closeRepository, 'getById').mockResolvedValue(mockCloseOpening)
+			vi.spyOn(closeRepository, 'getActive').mockResolvedValue(mockCloseOpening)
+			vi.spyOn(saleRepository, 'getAll').mockResolvedValue([createMockSale({ id: 101 })])
+			vi.spyOn(expenseRepository, 'getAll').mockResolvedValue([])
+			vi.spyOn(closeRepository, 'finish').mockResolvedValue(mockCloseFinished)
+			vi.spyOn(saleRepository, 'setClosed').mockResolvedValue(true)
+
+			await closeService.finish(mockCloseOpening.id)
+
+			expect(closeRepository.finish).toHaveBeenCalledWith(
+				mockCloseOpening.id,
+				expect.objectContaining({ expected_cash: null, expected_card: null }),
 				mockClient,
 			)
 		})
